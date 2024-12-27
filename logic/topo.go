@@ -39,8 +39,7 @@ type TopoResponse struct {
 func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	netcfg := NetConf{}
 	if err := ctx.BindJSON(&netcfg); err != nil {
-		log.Errorf("UpdateTopoHandler errors: %s", err)
-		ctx.WriteString("UpdateTopoHandler Error: BindJSON failure")
+		responseError(ctx, err)
 		return
 	}
 	// 设备信息入库
@@ -54,10 +53,12 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 		group, err := calc.ExtractGroup(deviceID)
 		if err != nil {
 			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s", deviceID)
+			continue
 		}
 		switchID, err := calc.ExtractSwitchID(deviceID)
 		if err != nil {
 			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s", deviceID)
+			continue
 		}
 		devices = append(devices, model.Device{
 			DeviceID: deviceID,
@@ -68,7 +69,8 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	}
 	devNum, err := m.db.InsertMulti(len(devices), devices)
 	if err != nil {
-		log.Errorf("UpdateTopoHandler errors: %s", err)
+		responseError(ctx, err)
+		return
 	}
 	// 链路信息入库
 	var links []model.Link
@@ -80,7 +82,8 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	}
 	linkNum, err := m.db.InsertMulti(len(links), links)
 	if err != nil {
-		log.Errorf("UpdateTopoHandler errors: %s", err)
+		responseError(ctx, err)
+		return
 	}
 	// 包
 	responseSuccess(ctx, TopoResponse{

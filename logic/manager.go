@@ -1,9 +1,10 @@
 package logic
 
 import (
-	"errors"
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/server/web/context"
+	log "github.com/sirupsen/logrus"
+	"onosutil/utils/errors"
 )
 
 // Manager 中心管理器，提供所有API
@@ -28,7 +29,7 @@ func NewManager(option Options) (*Manager, error) {
 	}
 	// 参数检查
 	if m.db == nil {
-		return nil, errors.New("invalid Error: ormer is nil")
+		return nil, errors.SetupDBFailed
 	}
 	globalManager = m
 	return m, nil
@@ -61,8 +62,14 @@ func responseSuccess(ctx *context.Context, data interface{}) {
 
 // 回包：错误
 func responseError(ctx *context.Context, err error) {
-	ctx.JSONResp(Response{
-		Code: -1,
-		Msg:  "error",
+	errT := errors.Unknown
+	if err != nil {
+		errT = errors.New(errors.CodeInner, err.Error())
+	}
+	log.Errorf("API(%s %s) error: %s", ctx.Request.Method, ctx.Request.URL.Path, err.Error())
+	ctx.Output.SetStatus(500)
+	ctx.JSONResp(errors.Error{
+		Code: errT.Code,
+		Msg:  errT.Msg,
 	})
 }

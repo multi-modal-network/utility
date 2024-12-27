@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/beego/beego/v2/server/web"
+	log "github.com/sirupsen/logrus"
+	"onosutil/logic"
 	"onosutil/model"
 )
 
@@ -9,62 +11,24 @@ import (
 // the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.
 
 func main() {
-	if err := model.SetupORM(); err != nil {
-		panic(err)
+	ormer, err := model.SetupORM()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	web.Router("/", &MainController{}) //TIP Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined or highlighted text
-	// to see how GoLand suggests fixing it.
+	manager, err := logic.NewManager(logic.Options{
+		Ormer: ormer,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	setupRouter(manager)
+
+	web.Router("/", &MainController{})
 	web.Run(":8088")
 }
 
 type MainController struct {
 	web.Controller
-}
-
-func (c *MainController) Get() {
-	name := c.GetString("name")
-	if name == "" {
-		c.Ctx.WriteString("Hello World")
-		return
-	}
-	c.Ctx.WriteString("Hello " + name)
-}
-
-func (c *MainController) Post() {
-	netcfg := NetConf{}
-	if err := c.BindJSON(&netcfg); err != nil {
-		c.Ctx.WriteString(err.Error())
-		return
-	}
-	//fmt.Println(netcfg)
-	//for deviceID, _ := range netcfg.Devices {
-	//	c.Ctx.WriteString(deviceID + "\n")
-	//}
-	//c.Ctx.WriteString(fmt.Sprintf("Number of Links: %d", len(netcfg.Links)))
-
-}
-
-type NetConf struct {
-	Devices map[string]Devices `json:"devices"`
-	Links   []Links            `json:"links"`
-}
-
-type Links struct {
-	EndPoint1 string `json:"endpoint1"`
-	EndPoint2 string `json:"endpoint2"`
-}
-
-type Devices struct {
-	Device map[string]DeviceBasic
-}
-
-type DeviceBasic struct {
-	Basic map[string]DeviceInfo `json:"basic"`
-}
-
-type DeviceInfo struct {
-	ManagementAddress string `json:"managementAddress"`
-	Driver            string `json:"driver"`
-	Pipeconf          string `json:"pipeconf"`
 }

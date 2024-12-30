@@ -1,10 +1,15 @@
 package logic
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/beego/beego/v2/server/web/context"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"net/http"
 	"onosutil/model"
 	"onosutil/utils/calc"
+	"onosutil/utils/errors"
 )
 
 type NetConf struct {
@@ -36,7 +41,55 @@ type TopoResponse struct {
 	linkNumber int
 }
 
+// 向onos推送netcfg
+func sendNetcfgToONOS(ctx *context.Context) error {
+	url := "http://127.0.0.1:8181/onos/v1/network/configuration"
+	// 去除json中的links字段内容（ONOS的API不识别）
+	b := ctx.Input.RequestBody
+	var data map[string]interface{}
+	if err := json.Unmarshal(b, &data); err != nil {
+		log.Error("sendNetcfgToONOS json.Unmarshal err:", err)
+		return err
+	}
+	delete(data, "links")
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Error("sendNetcfgToONOS json.Marshal err:", err)
+		return err
+	}
+	// 创建http请求
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Error("sendNetcfgToONOS http.NewRequest error:", err)
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.SetBasicAuth("onos", "rocks")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Error("sendNetcfgToONOS http.DefaultClient.Do error:", err)
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Error("sendNetcfgToONOS io.ReadAll error:", err)
+		return err
+	}
+	if resp.StatusCode != 200 {
+		log.Error("sendNetcfgToONOS failed:", resp.StatusCode)
+		return errors.New(resp.StatusCode, "sendNetcfgToONOS failed:"+string(body))
+	}
+	log.Info("sendNetcfgToONOS response success")
+	return nil
+}
+
 func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
+	if err := sendNetcfgToONOS(ctx); err != nil {
+		log.Error("sendNetcfgToONOS failed, error:", err)
+		responseError(ctx, err)
+		return
+	}
 	netcfg := NetConf{}
 	if err := ctx.BindJSON(&netcfg); err != nil {
 		responseError(ctx, err)
@@ -85,7 +138,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 		responseError(ctx, err)
 		return
 	}
-	// 包
+	// 回包
 	responseSuccess(ctx, TopoResponse{
 		devNumber:  int(devNum),
 		linkNumber: int(linkNum),

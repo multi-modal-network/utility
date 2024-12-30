@@ -10,6 +10,7 @@ import (
 	"onosutil/model"
 	"onosutil/utils/calc"
 	"onosutil/utils/errors"
+	"time"
 )
 
 type NetConf struct {
@@ -42,54 +43,66 @@ type TopoResponse struct {
 }
 
 // 向onos推送netcfg
-func sendNetcfgToONOS(ctx *context.Context) error {
+func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
+	startTime := time.Now()
 	url := "http://127.0.0.1:8181/onos/v1/network/configuration"
 	// 去除json中的links字段内容（ONOS的API不识别）
 	b := ctx.Input.RequestBody
 	var data map[string]interface{}
 	if err := json.Unmarshal(b, &data); err != nil {
+		elapsedTime := time.Since(startTime)
 		log.Error("sendNetcfgToONOS json.Unmarshal err:", err)
-		return err
+		return elapsedTime, err
 	}
 	delete(data, "links")
 	jsonData, err := json.Marshal(data)
 	if err != nil {
+		elapsedTime := time.Since(startTime)
 		log.Error("sendNetcfgToONOS json.Marshal err:", err)
-		return err
+		return elapsedTime, err
 	}
 	// 创建http请求
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
+		elapsedTime := time.Since(startTime)
 		log.Error("sendNetcfgToONOS http.NewRequest error:", err)
-		return err
+		return elapsedTime, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth("onos", "rocks")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		elapsedTime := time.Since(startTime)
 		log.Error("sendNetcfgToONOS http.DefaultClient.Do error:", err)
-		return err
+		return elapsedTime, err
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		elapsedTime := time.Since(startTime)
 		log.Error("sendNetcfgToONOS io.ReadAll error:", err)
-		return err
+		return elapsedTime, err
 	}
 	if resp.StatusCode != 200 {
+		elapsedTime := time.Since(startTime)
 		log.Error("sendNetcfgToONOS failed:", resp.StatusCode)
-		return errors.New(resp.StatusCode, "sendNetcfgToONOS failed:"+string(body))
+		return elapsedTime, errors.New(resp.StatusCode, "sendNetcfgToONOS failed:"+string(body))
 	}
+	elapsedTime := time.Since(startTime)
 	log.Info("sendNetcfgToONOS response success")
-	return nil
+	return elapsedTime, nil
 }
 
 func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
-	if err := sendNetcfgToONOS(ctx); err != nil {
+	// 转发Netcfg至ONOS
+	elapsedTime, err := sendNetcfgToONOS(ctx)
+	if err != nil {
 		log.Error("sendNetcfgToONOS failed, error:", err)
 		responseError(ctx, err)
 		return
 	}
+	log.Info("sendNetcfgToONOS elapsedTime: ", elapsedTime)
+	// 处理拓扑信息
 	netcfg := NetConf{}
 	if err := ctx.BindJSON(&netcfg); err != nil {
 		responseError(ctx, err)
@@ -97,7 +110,21 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	}
 	// 设备信息入库
 	var devices []model.Device
+	if _, err := m.db.QueryTable(new(model.Device)).All(devices, "deviceID"); err != nil {
+		log.Error("UpdateTopoHandler query devices error:", err)
+		responseError(ctx, err)
+		return
+	}
+	deviceIDMapping := make(map[string]interface{}, len(devices))
+	for _, device := range devices {
+		deviceIDMapping[device.DeviceID] = struct{}{}
+	}
+	var updateDevices []model.Device
 	for deviceID, _ := range netcfg.Devices {
+		// 如果deviceID已存在，continue
+		if _, ok := deviceIDMapping[deviceID]; ok {
+			continue
+		}
 		domain, err := calc.ExtractDomain(deviceID)
 		if err != nil {
 			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s", deviceID)
@@ -113,27 +140,43 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s", deviceID)
 			continue
 		}
-		devices = append(devices, model.Device{
+		updateDevices = append(updateDevices, model.Device{
 			DeviceID: deviceID,
 			Domain:   domain,
 			Group:    group,
 			SwitchID: switchID,
 		})
 	}
-	devNum, err := m.db.InsertMulti(len(devices), devices)
+	devNum, err := m.db.InsertMulti(len(updateDevices), updateDevices)
 	if err != nil {
 		responseError(ctx, err)
 		return
 	}
 	// 链路信息入库
 	var links []model.Link
+	if _, err := m.db.QueryTable(new(model.Link)).All(links); err != nil {
+		log.Error("UpdateTopoHandler query links error:", err)
+		responseError(ctx, err)
+		return
+	}
+	LinkMapping := make(map[string]interface{}, len(links))
+	for _, link := range links {
+		linkStr := link.EndPoint1 + "/" + link.EndPoint2
+		LinkMapping[linkStr] = struct{}{}
+	}
+	var updateLinks []model.Link
 	for _, link := range netcfg.Links {
-		links = append(links, model.Link{
+		linkStr := link.EndPoint1 + "/" + link.EndPoint2
+		// 如果link已存在，continue
+		if _, ok := LinkMapping[linkStr]; ok {
+			continue
+		}
+		updateLinks = append(updateLinks, model.Link{
 			EndPoint1: link.EndPoint1,
 			EndPoint2: link.EndPoint2,
 		})
 	}
-	linkNum, err := m.db.InsertMulti(len(links), links)
+	linkNum, err := m.db.InsertMulti(len(updateLinks), updateLinks)
 	if err != nil {
 		responseError(ctx, err)
 		return

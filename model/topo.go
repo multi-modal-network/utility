@@ -21,11 +21,19 @@ type Link struct {
 	EndPoint2 string `orm:"column(endPoint2)"`
 }
 
+func (d *Device) TableName() string {
+	return "t_devices"
+}
+
 // TableUnique 建立多字段唯一索引
 func (l *Link) TableUnique() [][]string {
 	return [][]string{
 		{"EndPoint1", "EndPoint2"},
 	}
+}
+
+func (l *Link) TableName() string {
+	return "t_links"
 }
 
 func SetupORM() (orm.Ormer, error) {

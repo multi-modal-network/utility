@@ -37,11 +37,6 @@ type DeviceInfo struct {
 	Pipeconf          string `json:"pipeconf"`
 }
 
-type TopoResponse struct {
-	devNumber  int
-	linkNumber int
-}
-
 // 向onos推送netcfg
 func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 	startTime := time.Now()
@@ -110,7 +105,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	}
 	// 设备信息入库
 	var devices []model.Device
-	if _, err := m.db.QueryTable(new(model.Device)).All(devices, "deviceID"); err != nil {
+	if _, err := m.db.QueryTable(&model.Device{}).All(&devices, "deviceID"); err != nil {
 		log.Error("UpdateTopoHandler query devices error:", err)
 		responseError(ctx, err)
 		return
@@ -119,7 +114,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	for _, device := range devices {
 		deviceIDMapping[device.DeviceID] = struct{}{}
 	}
-	var updateDevices []model.Device
+	updateDevices := make([]model.Device, 0, len(netcfg.Devices))
 	for deviceID, _ := range netcfg.Devices {
 		// 如果deviceID已存在，continue
 		if _, ok := deviceIDMapping[deviceID]; ok {
@@ -147,14 +142,17 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			SwitchID: switchID,
 		})
 	}
-	devNum, err := m.db.InsertMulti(len(updateDevices), updateDevices)
-	if err != nil {
-		responseError(ctx, err)
-		return
+	devNum := len(updateDevices)
+	if devNum != 0 {
+		_, err := m.db.InsertMulti(3, updateDevices)
+		if err != nil {
+			responseError(ctx, err)
+			return
+		}
 	}
 	// 链路信息入库
-	var links []model.Link
-	if _, err := m.db.QueryTable(new(model.Link)).All(links); err != nil {
+	links := make([]model.Link, 0, len(netcfg.Links))
+	if _, err := m.db.QueryTable(&model.Link{}).All(&links); err != nil {
 		log.Error("UpdateTopoHandler query links error:", err)
 		responseError(ctx, err)
 		return
@@ -176,14 +174,25 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			EndPoint2: link.EndPoint2,
 		})
 	}
-	linkNum, err := m.db.InsertMulti(len(updateLinks), updateLinks)
+	linkNum := len(updateLinks)
+	if linkNum != 0 {
+		_, err := m.db.InsertMulti(3, updateLinks)
+		if err != nil {
+			responseError(ctx, err)
+			return
+		}
+	}
 	if err != nil {
 		responseError(ctx, err)
 		return
 	}
 	// 回包
-	responseSuccess(ctx, TopoResponse{
-		devNumber:  int(devNum),
-		linkNumber: int(linkNum),
+	type updateResponse struct {
+		DevNumber  int
+		LinkNumber int
+	}
+	responseSuccess(ctx, updateResponse{
+		DevNumber:  devNum,
+		LinkNumber: linkNum,
 	})
 }

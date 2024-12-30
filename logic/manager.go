@@ -48,16 +48,17 @@ type Response struct {
 // 回包：成功
 func responseSuccess(ctx *context.Context, data interface{}) {
 	if data == nil {
-		data = Response{
-			Code: 0,
+		ctx.JSONResp(Response{
+			Code: 200,
 			Msg:  "success",
-		}
+		})
+	} else {
+		ctx.JSONResp(Response{
+			Code: 200,
+			Msg:  "success",
+			Data: data,
+		})
 	}
-	ctx.JSONResp(Response{
-		Code: 200,
-		Msg:  "success",
-		Data: data,
-	})
 }
 
 // 回包：错误

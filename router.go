@@ -7,4 +7,7 @@ import (
 
 func setupRouter(manager *logic.Manager) {
 	web.Post("/api/topo", manager.UpdateTopoHandler)
+	web.Get("/api/topo", manager.GetTopoHandler)
+
+	web.Router("/", &MainController{})
 }

@@ -6,6 +6,9 @@ const (
 	CodeUpdateTopoFailed       = 10002
 	CodeTopoUpdateDeviceFailed = 10003
 	CodeTopoUpdateLinkFailed   = 10004
+	CodeDataBaseConfigEmpty    = 10005
+	CodeRegisterDatabaseFailed = 10006
+	CodeRunSyncdbFailed        = 10007
 )
 
 var (
@@ -14,4 +17,7 @@ var (
 	UpdateTopoFailed       = New(CodeUpdateTopoFailed, "update topo failed")
 	TopoUpdateDeviceFailed = New(CodeTopoUpdateDeviceFailed, "update device failed")
 	TopoUpdateLinkFailed   = New(CodeTopoUpdateLinkFailed, "update link failed")
+	DataBaseConfigEmpty    = New(CodeDataBaseConfigEmpty, "database config empty")
+	RegisterDatabaseFailed = New(CodeRegisterDatabaseFailed, "register database failed")
+	RunSyncdbFailed        = New(CodeRunSyncdbFailed, "run syncdb failed")
 )

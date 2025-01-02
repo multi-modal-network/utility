@@ -24,11 +24,7 @@ type Links struct {
 }
 
 type Devices struct {
-	Device map[string]DeviceBasic
-}
-
-type DeviceBasic struct {
-	Basic map[string]DeviceInfo `json:"basic"`
+	Device map[string]DeviceInfo
 }
 
 type DeviceInfo struct {
@@ -88,6 +84,7 @@ func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 	return elapsedTime, nil
 }
 
+// UpdateTopoHandler 上传netcfg.json文件更新拓扑
 func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	// 转发Netcfg至ONOS
 	elapsedTime, err := sendNetcfgToONOS(ctx)
@@ -105,17 +102,17 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	}
 	// 设备信息入库
 	var devices []model.Device
-	if _, err := m.db.QueryTable(&model.Device{}).All(&devices, "deviceID"); err != nil {
+	if _, err := m.db.QueryTable(&model.Device{}).All(&devices); err != nil {
 		log.Error("UpdateTopoHandler query devices error:", err)
 		responseError(ctx, err)
 		return
 	}
 	deviceIDMapping := make(map[string]interface{}, len(devices))
 	for _, device := range devices {
-		deviceIDMapping[device.DeviceID] = struct{}{}
+		deviceIDMapping[device.DeviceID] = device
 	}
 	updateDevices := make([]model.Device, 0, len(netcfg.Devices))
-	for deviceID, _ := range netcfg.Devices {
+	for deviceID, dev := range netcfg.Devices {
 		// 如果deviceID已存在，continue
 		if _, ok := deviceIDMapping[deviceID]; ok {
 			continue
@@ -135,11 +132,15 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s", deviceID)
 			continue
 		}
+		info := dev.Device["basic"]
 		updateDevices = append(updateDevices, model.Device{
-			DeviceID: deviceID,
-			Domain:   domain,
-			Group:    group,
-			SwitchID: switchID,
+			DeviceID:          deviceID,
+			Domain:            domain,
+			Group:             group,
+			SwitchID:          switchID,
+			ManagementAddress: info.ManagementAddress,
+			Driver:            info.Driver,
+			Pipeconf:          info.Pipeconf,
 		})
 	}
 	devNum := len(updateDevices)
@@ -160,7 +161,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	LinkMapping := make(map[string]interface{}, len(links))
 	for _, link := range links {
 		linkStr := link.EndPoint1 + "/" + link.EndPoint2
-		LinkMapping[linkStr] = struct{}{}
+		LinkMapping[linkStr] = link
 	}
 	var updateLinks []model.Link
 	for _, link := range netcfg.Links {
@@ -182,17 +183,38 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			return
 		}
 	}
-	if err != nil {
+	// 回包
+	type updateTopoResponse struct {
+		DevNumber  int
+		LinkNumber int
+	}
+	responseSuccess(ctx, updateTopoResponse{
+		DevNumber:  devNum,
+		LinkNumber: linkNum,
+	})
+}
+
+// GetTopoHandler 获取拓扑
+func (m *Manager) GetTopoHandler(ctx *context.Context) {
+	var devices []model.Device
+	if _, err := m.db.QueryTable(&model.Device{}).All(&devices); err != nil {
+		log.Error("GetTopoHandler query devices error:", err)
+		responseError(ctx, err)
+		return
+	}
+	var links []model.Link
+	if _, err := m.db.QueryTable(&model.Link{}).All(&links); err != nil {
+		log.Error("GetTopoHandler query links error:", err)
 		responseError(ctx, err)
 		return
 	}
 	// 回包
-	type updateResponse struct {
-		DevNumber  int
-		LinkNumber int
+	type getTopoResponse struct {
+		Devices []model.Device `json:"devices"`
+		Links   []model.Link   `json:"links"`
 	}
-	responseSuccess(ctx, updateResponse{
-		DevNumber:  devNum,
-		LinkNumber: linkNum,
+	responseSuccess(ctx, getTopoResponse{
+		Devices: devices,
+		Links:   links,
 	})
 }

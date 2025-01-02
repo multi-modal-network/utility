@@ -1,0 +1,13 @@
+table `t_devices` already exists, skip
+add column `onosutil/model.Device.ManagementAddress` for table `t_devices`
+    ALTER TABLE `t_devices` ADD COLUMN `management_address` varchar(255) NOT NULL  DEFAULT '' 
+add column `onosutil/model.Device.Driver` for table `t_devices`
+    ALTER TABLE `t_devices` ADD COLUMN `driver` varchar(255) NOT NULL  DEFAULT '' 
+add column `onosutil/model.Device.Pipeconf` for table `t_devices`
+    ALTER TABLE `t_devices` ADD COLUMN `pipeconf` varchar(255) NOT NULL  DEFAULT '' 
+table `t_links` already exists, skip
+2025/01/02 17:04:14.706 [1;34m[I][0m [server.go:280]  http server Running on http://:8088
+time="2025-01-02T17:06:01+08:00" level=info msg="sendNetcfgToONOS response success"
+time="2025-01-02T17:06:01+08:00" level=info msg="sendNetcfgToONOS elapsedTime: 4.686494396s"
+time="2025-01-02T17:13:12+08:00" level=info msg="sendNetcfgToONOS response success"
+time="2025-01-02T17:13:12+08:00" level=info msg="sendNetcfgToONOS elapsedTime: 22.700511777s"

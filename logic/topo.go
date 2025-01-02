@@ -14,8 +14,8 @@ import (
 )
 
 type NetConf struct {
-	Devices map[string]Devices `json:"devices"`
-	Links   []Links            `json:"links"`
+	Devices map[string]DeviceBasic `json:"devices"`
+	Links   []Links                `json:"links"`
 }
 
 type Links struct {
@@ -23,8 +23,8 @@ type Links struct {
 	EndPoint2 string `json:"endpoint2"`
 }
 
-type Devices struct {
-	Device map[string]DeviceInfo
+type DeviceBasic struct {
+	Basic DeviceInfo `json:"basic"`
 }
 
 type DeviceInfo struct {
@@ -112,7 +112,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 		deviceIDMapping[device.DeviceID] = device
 	}
 	updateDevices := make([]model.Device, 0, len(netcfg.Devices))
-	for deviceID, dev := range netcfg.Devices {
+	for deviceID, device := range netcfg.Devices {
 		// 如果deviceID已存在，continue
 		if _, ok := deviceIDMapping[deviceID]; ok {
 			continue
@@ -132,15 +132,15 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s", deviceID)
 			continue
 		}
-		info := dev.Device["basic"]
+		basic := device.Basic
 		updateDevices = append(updateDevices, model.Device{
 			DeviceID:          deviceID,
 			Domain:            domain,
 			Group:             group,
 			SwitchID:          switchID,
-			ManagementAddress: info.ManagementAddress,
-			Driver:            info.Driver,
-			Pipeconf:          info.Pipeconf,
+			ManagementAddress: basic.ManagementAddress,
+			Driver:            basic.Driver,
+			Pipeconf:          basic.Pipeconf,
 		})
 	}
 	devNum := len(updateDevices)

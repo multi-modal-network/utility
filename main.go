@@ -24,7 +24,7 @@ func main() {
 	// 初始化beego路由
 	setupRouter(manager)
 
-	web.Run(":8088")
+	web.Run(":8188")
 }
 
 type MainController struct {

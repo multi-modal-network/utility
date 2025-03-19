@@ -33,6 +33,17 @@ type DeviceInfo struct {
 	Pipeconf          string `json:"pipeconf"`
 }
 
+// 回包
+type updateTopoResponse struct {
+	DevNumber  int
+	LinkNumber int
+}
+
+type getTopoResponse struct {
+	Devices []model.Device `json:"devices"`
+	Links   []model.Link   `json:"links"`
+}
+
 // 向onos推送netcfg
 func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 	startTime := time.Now()
@@ -183,11 +194,6 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			return
 		}
 	}
-	// 回包
-	type updateTopoResponse struct {
-		DevNumber  int
-		LinkNumber int
-	}
 	responseSuccess(ctx, updateTopoResponse{
 		DevNumber:  devNum,
 		LinkNumber: linkNum,
@@ -207,11 +213,6 @@ func (m *Manager) GetTopoHandler(ctx *context.Context) {
 		log.Error("GetTopoHandler query links error:", err)
 		responseError(ctx, err)
 		return
-	}
-	// 回包
-	type getTopoResponse struct {
-		Devices []model.Device `json:"devices"`
-		Links   []model.Link   `json:"links"`
 	}
 	responseSuccess(ctx, getTopoResponse{
 		Devices: devices,

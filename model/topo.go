@@ -10,7 +10,7 @@ type Device struct {
 	DeviceID          string `orm:"column(device_id);unique"`   // 设备ID，形如device:domain1:group2:level6:s305
 	Domain            int32  `orm:"column(domain)"`             // 域，domain后接的数字
 	Group             int32  `orm:"column(group)"`              // 组，group后接的数字
-	SwitchID          string `orm:"column(switch_id)"`          // 交换机ID，s后接的数字
+	SwitchID          int32  `orm:"column(switch_id)"`          // 交换机ID，s后接的数字
 	ManagementAddress string `orm:"column(management_address)"` // grpc地址，netcfg中配置
 	Driver            string `orm:"column(driver)"`             // 设备驱动，netcfg中配置
 	Pipeconf          string `orm:"column(pipeconf)"`           // 设备流水线，netcfg中配置

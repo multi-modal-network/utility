@@ -14,6 +14,7 @@ type Device struct {
 	ManagementAddress string `orm:"column(management_address)"`
 	Driver            string `orm:"column(driver)"`
 	Pipeconf          string `orm:"column(pipeconf)"`
+	SupportModal      string `orm:"column(support_modal)"`
 }
 
 type Link struct {

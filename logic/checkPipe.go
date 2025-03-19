@@ -34,11 +34,6 @@ func modelStringCorrect(modaltype string) string {
 }
 
 func (m *Manager) CheckPipeHandler(ctx *context.Context) {
-	// 解析请求
-	// {
-	// 	sendArray := ["device:domain1:group1:level1:s1", "device:domain1:group1:level2:s2"]
-	// 	modalType := "ipv4"
-	// }
 	var req struct {
 		SendArray []string `json:"sendArray"`
 		ModalType string   `json:"modalType"`
@@ -55,20 +50,19 @@ func (m *Manager) CheckPipeHandler(ctx *context.Context) {
 
 	// 遍历sendArray，检查是否存在不支持的设备
 	for _, device := range req.SendArray {
-		res := make([]*model.Devices, 0)
 		//查找数据库中所有的表
-
-		if _, err := m.db.QueryTable(&model.Devices{}).Filter("device_id", device).All(&res); err != nil {
+		var res []*model.Device
+		if _, err := m.db.QueryTable(&model.Device{}).Filter("device_id", device).All(&res); err != nil {
 			responseError(ctx, err)
 			return
 		}
 
 		if len(res) == 0 {
 			log.Printf("device %s not found", device)
-			break
+			continue
 		}
 
-		if strings.Contains(res[0].Support_modal, req.ModalType) {
+		if strings.Contains(res[0].SupportModal, req.ModalType) {
 			continue
 		} else {
 			unsupported = append(unsupported, device)

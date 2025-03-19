@@ -7,10 +7,10 @@ import (
 // Device 设备结构
 type Device struct {
 	ID                int32  `orm:"pk;auto;column(id)"`
-	DeviceID          string `orm:"column(deviceID);unique"`
+	DeviceID          string `orm:"column(device_id);unique"`
 	Domain            int32  `orm:"column(domain)"`
 	Group             int32  `orm:"column(group)"`
-	SwitchID          string `orm:"column(switchID)"`
+	SwitchID          string `orm:"column(switch_id)"`
 	ManagementAddress string `orm:"column(management_address)"`
 	Driver            string `orm:"column(driver)"`
 	Pipeconf          string `orm:"column(pipeconf)"`

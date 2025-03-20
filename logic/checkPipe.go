@@ -3,6 +3,7 @@ package logic
 import (
 	"log"
 	"onosutil/model"
+	"onosutil/utils/format"
 	"os"
 	"strings"
 	"time"
@@ -23,16 +24,6 @@ func outputToFile(unsupported []string, modal string) {
 	}
 }
 
-// 校正modelstring格式
-func modelStringCorrect(modaltype string) string {
-	switch modaltype {
-	case "ipv4":
-		return "IP"
-	default:
-		return strings.ToUpper(modaltype)
-	}
-}
-
 func (m *Manager) CheckPipeHandler(ctx *context.Context) {
 	var req struct {
 		SendArray []string `json:"sendArray"`
@@ -44,7 +35,7 @@ func (m *Manager) CheckPipeHandler(ctx *context.Context) {
 		return
 	}
 
-	req.ModalType = modelStringCorrect(req.ModalType)
+	req.ModalType = format.ModelStringCorrect(req.ModalType)
 
 	unsupported := make([]string, 0)
 

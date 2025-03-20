@@ -98,13 +98,13 @@ func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 // UpdateTopoHandler 上传netcfg.json文件更新拓扑
 func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	// 转发Netcfg至ONOS
-	//elapsedTime, err := sendNetcfgToONOS(ctx)
-	//if err != nil {
-	//	log.Error("sendNetcfgToONOS failed, error:", err)
-	//	responseError(ctx, err)
-	//	return
-	//}
-	//log.Info("sendNetcfgToONOS elapsedTime: ", elapsedTime)
+	elapsedTime, err := sendNetcfgToONOS(ctx)
+	if err != nil {
+		log.Error("sendNetcfgToONOS failed, error:", err)
+		responseError(ctx, err)
+		return
+	}
+	log.Info("sendNetcfgToONOS elapsedTime: ", elapsedTime)
 	// 处理拓扑信息
 	netcfg := NetConf{}
 	if err := ctx.BindJSON(&netcfg); err != nil {

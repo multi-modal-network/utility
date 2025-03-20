@@ -18,7 +18,7 @@ func (m *Manager) GetTofinoPortHandler(ctx *context.Context) {
 	modalType := ctx.Input.Query("modalType")
 	tofino := &model.TofinoPort{}
 	if err := m.db.QueryTable(&model.TofinoPort{}).Filter("switch_id__exact", switchID).
-		Filter("modal_type__exact", modalType).One(tofino); err != nil {
+		Filter("modal_type__exact", modalType).One(&tofino); err != nil {
 		log.Errorf("GetTofinoPortHandler query port failed: %v", err)
 		responseError(ctx, err)
 		return

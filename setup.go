@@ -65,6 +65,7 @@ func SetupORM(config *viper.Viper) (orm.Ormer, error) {
 	orm.RegisterModel(new(model.Device))
 	orm.RegisterModel(new(model.Link))
 	orm.RegisterModel(new(model.TofinoPort))
+	orm.RegisterModel(new(model.TrafficHistory))
 	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4", config.GetString("user"),
 		config.GetString("password"), config.GetString("host"),
 		config.GetString("port"), config.GetString("database"))

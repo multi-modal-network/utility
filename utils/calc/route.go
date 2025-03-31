@@ -66,7 +66,7 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 	srcSwitch, dstSwitch := (srcHost-1)%255+1, (dstHost-1)%255+1
 	devices := make([]model.DevicePort, 0)
 	if srcVmx == dstVmx { // 容器内通信
-		domain, group := srcDomain, GetDomain(srcVmx)
+		domain, group := srcDomain, GetGroup(srcVmx)
 		devices = append(devices, model.DevicePort{
 			DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(dstSwitch), dstSwitch+255*dstVmx),
 			Port:     portLeft,

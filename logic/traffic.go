@@ -49,7 +49,7 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 			switchID := calc.GetSwitchID(dev.DeviceID)
 			tofino := &model.TofinoPort{}
 			if err := m.db.QueryTable(&model.TofinoPort{}).Filter("switch_id__exact", switchID).
-				Filter("modal_type__exact", trafficInfo.ModeName).One(&tofino); err != nil {
+				Filter("modal_type__exact", trafficInfo.ModeName).One(tofino); err != nil {
 				log.Warnf("RecordTrafficHandler device %v not support", dev.DeviceID)
 				reachable = false
 				continue
@@ -57,6 +57,7 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 		}
 		// check pipeconf
 		device := model.Device{}
+		log.Info("deviceid:%s", dev.DeviceID)
 		if err := m.db.QueryTable(&model.Device{}).Filter("device_id", dev.DeviceID).One(&device); err != nil {
 			log.Errorf("RecordTrafficHandler path device not found, err: %v", err)
 			return

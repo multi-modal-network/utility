@@ -57,7 +57,7 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 		}
 		// check pipeconf
 		device := model.Device{}
-		log.Info("deviceid:%s", dev.DeviceID)
+		log.Infof("deviceid:%s", dev.DeviceID)
 		if err := m.db.QueryTable(&model.Device{}).Filter("device_id", dev.DeviceID).One(&device); err != nil {
 			log.Errorf("RecordTrafficHandler path device not found, err: %v", err)
 			return

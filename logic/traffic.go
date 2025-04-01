@@ -36,7 +36,7 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 	}
 	// 获取理论上最佳路径
 	devices := calc.GetPathDevices(trafficInfo.SrcHost, trafficInfo.DstHost)
-	log.Infof("devices: %v", devices)
+	log.Infof("PathInfo devices: %v", devices)
 	// 获取实际pathInfo （流量可能被理论路径上的某个交换机截断，原因：转发端口不存在、pipeconf不支持模态）
 	var pathInfo []string
 	reachable := true
@@ -50,27 +50,29 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 			tofino := &model.TofinoPort{}
 			if err := m.db.QueryTable(&model.TofinoPort{}).Filter("switch_id__exact", switchID).
 				Filter("modal_type__exact", trafficInfo.ModeName).One(tofino); err != nil {
-				log.Warnf("RecordTrafficHandler device %v not support", dev.DeviceID)
+				log.Warnf("RecordTrafficHandler device %v port not support", dev.DeviceID)
 				reachable = false
 				continue
 			}
+			dev.Port = tofino.Port
 		}
 		// check pipeconf
 		device := model.Device{}
-		log.Infof("deviceid:%s", dev.DeviceID)
 		if err := m.db.QueryTable(&model.Device{}).Filter("device_id", dev.DeviceID).One(&device); err != nil {
-			log.Errorf("RecordTrafficHandler path device not found, err: %v", err)
-			return
+			log.Warnf("RecordTrafficHandler path device not found, err: %v", err)
+			reachable = false
+			continue
 		}
 		mode := format.ModelStringCorrect(trafficInfo.ModeName)
 		if !strings.Contains(device.SupportModal, mode) {
-			log.Warnf("RecordTrafficHandler device %v not support", dev.DeviceID)
+			log.Warnf("RecordTrafficHandler device %v pipeconf not support", dev.DeviceID)
 			reachable = false
 			continue
 		}
 		// 更新pathInfo
 		pathInfo = append(pathInfo, strings.Join(append([]string{}, dev.DeviceID, strconv.Itoa(int(dev.Port))), "/"))
 	}
+	log.Infof("Practical Routing Path:%v", pathInfo)
 	traffic := model.TrafficHistory{
 		SrcHost:  trafficInfo.SrcHost,
 		DstHost:  trafficInfo.DstHost,

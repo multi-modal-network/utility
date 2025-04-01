@@ -59,6 +59,49 @@ func GetSwitchID(deviceID string) int32 {
 	}
 }
 
+// addUplinkDevices 上行链路 srcSwitch向父节点转发
+func addUplinkDevices(vmx, srcSwitch int32, crossGroup bool) []model.DevicePort {
+	res := make([]model.DevicePort, 0)
+	domain, group := GetDomain(vmx), GetGroup(vmx)
+	end := map[bool]int32{false: 1, true: 0}[crossGroup] // 一行赋值
+	for s := srcSwitch; s != end; s /= 2 {
+		res = append(res, model.DevicePort{
+			DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(s), s+255*vmx),
+			Port:     portUp,
+		})
+	}
+	return res
+}
+
+// addDownlinkDevices 下行链路 dstSwitch的父节点向dstSwitch转发
+func addDownlinkDevices(vmx, dstSwitch int32) []model.DevicePort {
+	domain, group := GetDomain(vmx), GetGroup(vmx)
+	res := make([]model.DevicePort, 0)
+	for t := dstSwitch; t != 1; t /= 2 {
+		if t/2*2 == t {
+			res = append(res, model.DevicePort{
+				DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(t/2), t/2+255*vmx),
+				Port:     portLeft,
+			})
+		} else {
+			res = append(res, model.DevicePort{
+				DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(t/2), t/2+255*vmx),
+				Port:     portRight,
+			})
+		}
+	}
+	// 反转切片
+	for i, j := 0, len(res)-1; i < j; i, j = i+1, j-1 {
+		res[i], res[j] = res[j], res[i]
+	}
+	// 最后dstSwitch向dstHost转发
+	res = append(res, model.DevicePort{
+		DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(dstSwitch), dstSwitch+255*vmx),
+		Port:     portLeft,
+	})
+	return res
+}
+
 // GetPathDevices 算路
 func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 	srcVmx, dstVmx := srcHost/256, dstHost/256
@@ -66,41 +109,12 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 	srcSwitch, dstSwitch := (srcHost-1)%255+1, (dstHost-1)%255+1
 	devices := make([]model.DevicePort, 0)
 	if srcVmx == dstVmx { // 容器内通信
-		domain, group := srcDomain, GetGroup(srcVmx)
-		devices = append(devices, model.DevicePort{
-			DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(dstSwitch), dstSwitch+255*dstVmx),
-			Port:     portLeft,
-		})
-		for ; srcSwitch != dstSwitch; srcSwitch, dstSwitch = srcSwitch/2, dstSwitch/2 {
-			// srcSwitch向父节点转发
-			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(srcSwitch), srcSwitch+255*srcVmx),
-				Port:     portUp,
-			})
-			// dstSwitch的父节点向dstSwitch转发
-			if dstSwitch/2*2 == dstSwitch {
-				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(dstSwitch/2), dstSwitch/2+255*dstVmx),
-					Port:     portLeft,
-				})
-			} else {
-				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(dstSwitch/2), dstSwitch/2+255*dstVmx),
-					Port:     portRight,
-				})
-			}
-		}
+		devices = append(devices, addUplinkDevices(srcVmx, srcSwitch, false)...) // 处理上行链路
+		devices = append(devices, addDownlinkDevices(dstVmx, dstSwitch)...)      // 处理下行链路
 	} else if srcDomain == dstDomain { // 跨容器通信
-		domain := srcDomain
-		// 源group源主机直接发至S1
-		for ; srcSwitch != 0; srcSwitch /= 2 {
-			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, GetGroup(srcVmx), GetLevel(srcSwitch), srcSwitch+255*srcVmx),
-				Port:     portUp,
-			})
-		}
+		devices = append(devices, addUplinkDevices(srcVmx, srcSwitch, true)...) // 处理上行链路
 		// tofino交换机下发流表
-		switch domain {
+		switch srcDomain {
 		case 1:
 			devices = append(devices, model.DevicePort{
 				DeviceID: fmt.Sprintf("device:domain2:p1"),
@@ -121,31 +135,9 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 			break
 		}
 		// 目的groupS1直接发至目的主机
-		devices = append(devices, model.DevicePort{
-			DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, GetGroup(dstVmx), GetLevel(dstSwitch), dstSwitch+255*dstVmx),
-			Port:     portLeft,
-		})
-		for ; dstSwitch != 1; dstSwitch /= 2 {
-			if dstSwitch/2*2 == dstSwitch {
-				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, GetGroup(dstVmx), GetLevel(dstSwitch/2), dstSwitch/2+255*dstVmx),
-					Port:     portLeft,
-				})
-			} else {
-				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, GetGroup(dstVmx), GetLevel(dstSwitch/2), dstSwitch/2+255*dstVmx),
-					Port:     portRight,
-				})
-			}
-		}
+		devices = append(devices, addDownlinkDevices(dstVmx, dstSwitch)...) // 处理下行链路
 	} else { // 跨域通信
-		// 源group源主机直接发至S1
-		for ; srcSwitch != 0; srcSwitch /= 2 {
-			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", srcDomain, GetGroup(srcVmx), GetLevel(srcSwitch), srcSwitch+255*srcVmx),
-				Port:     portUp,
-			})
-		}
+		devices = append(devices, addUplinkDevices(srcVmx, srcSwitch, true)...) // 处理上行链路
 		// tofino交换机下发流表 （首先查询Tofino交换机模态对应转发端口）
 		switch srcDomain {
 		case 1:
@@ -199,24 +191,7 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 				})
 			}
 		}
-		// 目的groupS1直接发至目的主机
-		devices = append(devices, model.DevicePort{
-			DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", dstDomain, GetGroup(dstVmx), GetLevel(dstSwitch), dstSwitch+255*dstVmx),
-			Port:     portLeft,
-		})
-		for ; dstSwitch != 1; dstSwitch /= 2 {
-			if dstSwitch/2*2 == dstSwitch {
-				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", dstDomain, GetGroup(dstVmx), GetLevel(dstSwitch/2), dstSwitch/2+255*dstVmx),
-					Port:     portLeft,
-				})
-			} else {
-				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", dstDomain, GetGroup(dstVmx), GetLevel(dstSwitch/2), dstSwitch/2+255*dstVmx),
-					Port:     portRight,
-				})
-			}
-		}
+		devices = append(devices, addDownlinkDevices(dstVmx, dstSwitch)...) // 处理下行链路
 	}
 	return devices
 }

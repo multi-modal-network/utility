@@ -225,6 +225,7 @@ func (m *Manager) GetTopoHandler(ctx *context.Context) {
 		responseError(ctx, err)
 		return
 	}
+	// todo： 对齐ONOS API的回包格式
 	responseSuccess(ctx, getTopoResponse{
 		Devices: devices,
 		Links:   links,

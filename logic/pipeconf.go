@@ -1,7 +1,7 @@
 package logic
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"onosutil/model"
 	"onosutil/utils/format"
 	"os"
@@ -24,7 +24,8 @@ func outputToFile(unsupported []string, modal string) {
 	}
 }
 
-func (m *Manager) CheckPipeHandler(ctx *context.Context) {
+// todo: 修改BatchCheckPipeconfHandler的整体逻辑
+func (m *Manager) BatchCheckPipeconfHandler(ctx *context.Context) {
 	var req struct {
 		SendArray []string `json:"sendArray"`
 		ModalType string   `json:"modalType"`
@@ -69,5 +70,17 @@ func (m *Manager) CheckPipeHandler(ctx *context.Context) {
 	responseSuccess(ctx, getUnsupportDeviceResponse{
 		UnsupportDevices: unsupported,
 	})
+
+}
+
+// GetDevicePipeconfHandler 获取设备对应的pipeconf信息
+func (m *Manager) GetDevicePipeconfHandler(ctx *context.Context) {
+	deviceID := ctx.Input.Query("deviceID")
+	log.Infof(deviceID)
+	// todo: 回包内容要和ONOS API一致
+}
+
+// ModifyDevicePipeconfHandler 修改设备的pipeconf（调用武大的流水线覆盖功能）
+func (m *Manager) ModifyDevicePipeconfHandler(ctx *context.Context) {
 
 }

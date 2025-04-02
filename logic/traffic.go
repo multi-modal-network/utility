@@ -77,7 +77,7 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 		SrcHost:  trafficInfo.SrcHost,
 		DstHost:  trafficInfo.DstHost,
 		ModeName: trafficInfo.ModeName,
-		Datetime: time.Unix(trafficInfo.DateTime, 0),
+		Datetime: time.Unix(trafficInfo.DateTime, 0).In(time.FixedZone("CST", 8*60*60)), // 修改时间为中国时区
 		PathInfo: strings.Join(pathInfo, ","),
 	}
 	if _, err := m.db.Insert(&traffic); err != nil {

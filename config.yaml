@@ -1,6 +1,6 @@
 db:
-  host: 218.199.84.172
+  host: 127.0.0.1
   database: onos
-  password: root
+  password: 132311
   port: 3306
   user: root

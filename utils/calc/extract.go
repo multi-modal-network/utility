@@ -91,8 +91,21 @@ func ExtractSwitchID(s string) (int32, error) {
 		// 如果没有找到冒号，返回空字符串和false
 		return 0, errors.New("extractSwitchID failed")
 	}
-	// 获取最后一个冒号之后的所有字符
-	switchID, err := strconv.ParseInt(s[lastIndex+2:], 10, 32)
+	// 获取最后一个冒号后一位的所有字符
+	remaining := s[lastIndex+1:]
+	// 提取所有数字
+	var numericPart strings.Builder
+	for _, r := range remaining {
+		if r >= '0' && r <= '9' {
+			numericPart.WriteRune(r)
+		} else if numericPart.Len() > 0 {
+			break
+		}
+	}
+	if numericPart.Len() == 0 {
+		return 0, errors.New("extractSwitchID failed: no numeric part found")
+	}
+	switchID, err := strconv.ParseInt(numericPart.String(), 10, 32)
 	if err != nil {
 		return 0, errors.New("extractSwitchID failed")
 	}

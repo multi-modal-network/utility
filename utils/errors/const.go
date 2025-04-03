@@ -9,6 +9,7 @@ const (
 	CodeDataBaseConfigEmpty    = 10005
 	CodeRegisterDatabaseFailed = 10006
 	CodeRunSyncdbFailed        = 10007
+	CodeGetTofinoPortFailed    = 10008
 )
 
 var (
@@ -20,4 +21,5 @@ var (
 	DataBaseConfigEmpty    = New(CodeDataBaseConfigEmpty, "database config empty")
 	RegisterDatabaseFailed = New(CodeRegisterDatabaseFailed, "register database failed")
 	RunSyncdbFailed        = New(CodeRunSyncdbFailed, "run syncdb failed")
+	GetTofinoPortFailed    = New(CodeGetTofinoPortFailed, "get tofino port failed")
 )

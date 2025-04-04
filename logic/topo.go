@@ -10,17 +10,13 @@ import (
 	"onosutil/model"
 	"onosutil/utils/calc"
 	"onosutil/utils/errors"
+	"strings"
 	"time"
 )
 
 type NetConf struct {
 	Devices map[string]DeviceBasic `json:"devices"`
-	Links   []Links                `json:"links"`
-}
-
-type Links struct {
-	EndPoint1 string `json:"endpoint1"`
-	EndPoint2 string `json:"endpoint2"`
+	Links   map[string]struct{}    `json:"links"`
 }
 
 type DeviceBasic struct {
@@ -98,13 +94,13 @@ func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 // UpdateTopoHandler 上传netcfg.json文件更新拓扑
 func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	// 转发Netcfg至ONOS
-	elapsedTime, err := sendNetcfgToONOS(ctx)
-	if err != nil {
-		log.Error("sendNetcfgToONOS failed, error:", err)
-		responseError(ctx, err)
-		return
-	}
-	log.Info("sendNetcfgToONOS elapsedTime: ", elapsedTime)
+	//elapsedTime, err := sendNetcfgToONOS(ctx)
+	//if err != nil {
+	//	log.Error("sendNetcfgToONOS failed, error:", err)
+	//	responseError(ctx, err)
+	//	return
+	//}
+	//log.Info("sendNetcfgToONOS elapsedTime: ", elapsedTime)
 	// 处理拓扑信息
 	netcfg := NetConf{}
 	if err := ctx.BindJSON(&netcfg); err != nil {
@@ -123,6 +119,11 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 		deviceIDMapping[device.DeviceID] = device
 	}
 	for deviceID, d := range netcfg.Devices {
+		deviceName, err := calc.ExtractDeviceName(deviceID)
+		if err != nil {
+			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s, %s", deviceID, err)
+			continue
+		}
 		domain, err := calc.ExtractDomain(deviceID)
 		if err != nil {
 			log.Errorf("UpdateTopoHandler error: invalid deviceID: %s, %s", deviceID, err)
@@ -145,6 +146,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 		}
 		device := model.Device{
 			DeviceID:          deviceID,
+			DeviceName:        deviceName,
 			Domain:            domain,
 			Group:             group,
 			SwitchID:          switchID,
@@ -180,26 +182,26 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	}
 	LinkMapping := make(map[string]interface{}, len(links))
 	for _, link := range links {
-		linkStr := link.EndPoint1 + "/" + link.EndPoint2
+		linkStr := link.EndPoint1 + "-" + link.EndPoint2
 		LinkMapping[linkStr] = link
 	}
-	for _, l := range netcfg.Links {
-		linkStr := l.EndPoint1 + "/" + l.EndPoint2
-		// 不存在，insert；存在，update
+	for linkStr, _ := range netcfg.Links {
+		parts := strings.Split(linkStr, "-")
 		link := model.Link{
-			EndPoint1: l.EndPoint1,
-			EndPoint2: l.EndPoint2,
+			EndPoint1: parts[0],
+			EndPoint2: parts[1],
 		}
+		// 不存在，insert；存在，update
 		if _, ok := LinkMapping[linkStr]; !ok {
 			_, err := m.db.Insert(&link)
 			if err != nil {
-				log.Error("UpdateTopoHandler insert link failed: ", l.EndPoint1, l.EndPoint2)
+				log.Error("UpdateTopoHandler insert link failed: ", link.EndPoint1, link.EndPoint2)
 				responseError(ctx, err)
 			}
 		} else {
 			_, err := m.db.Update(&link)
 			if err != nil {
-				log.Error("UpdateTopoHandler update link failed: ", l.EndPoint1, l.EndPoint2)
+				log.Error("UpdateTopoHandler update link failed: ", link.EndPoint1, link.EndPoint2)
 				responseError(ctx, err)
 			}
 		}

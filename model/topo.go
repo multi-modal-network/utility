@@ -20,8 +20,8 @@ type Device struct {
 
 type Link struct {
 	ID        int32  `orm:"pk;auto;column(id)"`
-	EndPoint1 string `orm:"column(endPoint1)"`
-	EndPoint2 string `orm:"column(endPoint2)"`
+	EndPoint1 string `orm:"column(end_point1)"`
+	EndPoint2 string `orm:"column(end_point2)"`
 }
 
 // DevicePort 交换机及转发端口结构

@@ -24,6 +24,15 @@ func ExtractSupportModal(s string) (string, error) {
 	return strings.Split(s, ".")[2], nil
 }
 
+// ExtractDeviceName 从deviceID中提取deviceName
+func ExtractDeviceName(s string) (string, error) {
+	parts := strings.Split(s, "_")
+	if len(parts) <= 1 {
+		return "", errors.New("ExtractDeviceName failed")
+	}
+	return parts[0], nil
+}
+
 // ExtractGroup 从deviceID中提取group
 func ExtractGroup(s string) (int32, error) {
 	if s == "device:domain2:p1" || s == "device:domain4:p4" || s == "device:domain6:p6" ||

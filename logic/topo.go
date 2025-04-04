@@ -31,8 +31,8 @@ type DeviceInfo struct {
 
 // 回包
 type updateTopoResponse struct {
-	DevNumber  int
-	LinkNumber int
+	DevNumber  int64 `json:"devNumber"`
+	LinkNumber int64 `json:"linkNumber"`
 }
 
 type getTopoResponse struct {
@@ -107,17 +107,9 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 		responseError(ctx, err)
 		return
 	}
+	devNumber, linkNumber := int64(0), int64(0)
 	// 设备信息入库
-	var devices []model.Device
-	if _, err := m.db.QueryTable(&model.Device{}).All(&devices); err != nil {
-		log.Error("UpdateTopoHandler query devices error:", err)
-		responseError(ctx, err)
-		return
-	}
-	deviceIDMapping := make(map[string]interface{}, len(devices))
-	for _, device := range devices {
-		deviceIDMapping[device.DeviceID] = device
-	}
+	devices := make([]model.Device, 0)
 	for deviceID, d := range netcfg.Devices {
 		deviceName, err := calc.ExtractDeviceName(deviceID)
 		if err != nil {
@@ -144,7 +136,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			log.Errorf("UpdateTopoHandler error: invalid pipeconf: %s, %s", d.Basic.Pipeconf, err)
 			continue
 		}
-		device := model.Device{
+		devices = append(devices, model.Device{
 			DeviceID:          deviceID,
 			DeviceName:        deviceName,
 			Domain:            domain,
@@ -154,62 +146,33 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			Driver:            d.Basic.Driver,
 			Pipeconf:          d.Basic.Pipeconf,
 			SupportModal:      supportModal,
-		}
-		// 不存在，insert；存在，update
-		if _, ok := deviceIDMapping[deviceID]; !ok {
-			_, err := m.db.Insert(&device)
-			if err != nil {
-				log.Error("UpdateTopoHandler insert device failed: ", device)
-				responseError(ctx, err)
-				return
-			}
-		} else {
-			_, err := m.db.Update(&device)
-			if err != nil {
-				log.Error("UpdateTopoHandler update device failed: ", device)
-				responseError(ctx, err)
-				return
-			}
-		}
+		})
 	}
-
-	// 链路信息入库
-	links := make([]model.Link, 0, len(netcfg.Links))
-	if _, err := m.db.QueryTable(&model.Link{}).All(&links); err != nil {
-		log.Error("UpdateTopoHandler query links error:", err)
+	devNumber, err := m.db.InsertMulti(100, devices)
+	if err != nil {
+		log.Errorf("UpdateTopoHandler error: InsertMulti error: %s", err)
 		responseError(ctx, err)
 		return
 	}
-	LinkMapping := make(map[string]interface{}, len(links))
-	for _, link := range links {
-		linkStr := link.EndPoint1 + "-" + link.EndPoint2
-		LinkMapping[linkStr] = link
-	}
+	// 链路信息入库
+	links := make([]model.Link, 0)
 	for linkStr, _ := range netcfg.Links {
 		parts := strings.Split(linkStr, "-")
-		link := model.Link{
+		links = append(links, model.Link{
 			EndPoint1: parts[0],
 			EndPoint2: parts[1],
-		}
-		// 不存在，insert；存在，update
-		if _, ok := LinkMapping[linkStr]; !ok {
-			_, err := m.db.Insert(&link)
-			if err != nil {
-				log.Error("UpdateTopoHandler insert link failed: ", link.EndPoint1, link.EndPoint2)
-				responseError(ctx, err)
-			}
-		} else {
-			_, err := m.db.Update(&link)
-			if err != nil {
-				log.Error("UpdateTopoHandler update link failed: ", link.EndPoint1, link.EndPoint2)
-				responseError(ctx, err)
-			}
-		}
+		})
 	}
-
+	linkNumber, err = m.db.InsertMulti(100, links)
+	if err != nil {
+		log.Errorf("UpdateTopoHandler error: InsertMulti error: %s", err)
+		responseError(ctx, err)
+		return
+	}
+	// 回包
 	responseSuccess(ctx, updateTopoResponse{
-		DevNumber:  len(netcfg.Devices),
-		LinkNumber: len(netcfg.Links),
+		DevNumber:  devNumber,
+		LinkNumber: linkNumber,
 	})
 }
 

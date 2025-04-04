@@ -66,8 +66,8 @@ func addUplinkDevices(vmx, srcSwitch int32, crossGroup bool) []model.DevicePort 
 	end := map[bool]int32{false: 1, true: 0}[crossGroup] // 一行赋值
 	for s := srcSwitch; s != end; s /= 2 {
 		res = append(res, model.DevicePort{
-			DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(s), s+255*vmx),
-			Port:     portUp,
+			DeviceName: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(s), s+255*vmx),
+			Port:       portUp,
 		})
 	}
 	return res
@@ -80,13 +80,13 @@ func addDownlinkDevices(vmx, dstSwitch int32) []model.DevicePort {
 	for t := dstSwitch; t != 1; t /= 2 {
 		if t/2*2 == t {
 			res = append(res, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(t/2), t/2+255*vmx),
-				Port:     portLeft,
+				DeviceName: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(t/2), t/2+255*vmx),
+				Port:       portLeft,
 			})
 		} else {
 			res = append(res, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(t/2), t/2+255*vmx),
-				Port:     portRight,
+				DeviceName: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(t/2), t/2+255*vmx),
+				Port:       portRight,
 			})
 		}
 	}
@@ -96,8 +96,8 @@ func addDownlinkDevices(vmx, dstSwitch int32) []model.DevicePort {
 	}
 	// 最后dstSwitch向dstHost转发
 	res = append(res, model.DevicePort{
-		DeviceID: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(dstSwitch), dstSwitch+255*vmx),
-		Port:     portLeft,
+		DeviceName: fmt.Sprintf("device:domain%d:group%d:level%d:s%d", domain, group, GetLevel(dstSwitch), dstSwitch+255*vmx),
+		Port:       portLeft,
 	})
 	return res
 }
@@ -117,20 +117,20 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 		switch srcDomain {
 		case 1:
 			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain2:p1"),
-				Port:     domain2TofinoPorts[dstVmx%3],
+				DeviceName: fmt.Sprintf("device:domain2:p1"),
+				Port:       domain2TofinoPorts[dstVmx%3],
 			})
 			break
 		case 5:
 			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain4:p4"),
-				Port:     domain4TofinoPorts[dstVmx%3],
+				DeviceName: fmt.Sprintf("device:domain4:p4"),
+				Port:       domain4TofinoPorts[dstVmx%3],
 			})
 			break
 		case 7:
 			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain6:p6"),
-				Port:     domain6TofinoPorts[(dstVmx+1)%3],
+				DeviceName: fmt.Sprintf("device:domain6:p6"),
+				Port:       domain6TofinoPorts[(dstVmx+1)%3],
 			})
 			break
 		}
@@ -142,52 +142,52 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 		switch srcDomain {
 		case 1:
 			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain2:p1"),
-				Port:     0,
+				DeviceName: fmt.Sprintf("device:domain2:p1"),
+				Port:       0,
 			})
 			if dstDomain == 5 {
 				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain4:p4"),
-					Port:     domain4TofinoPorts[dstVmx%3],
+					DeviceName: fmt.Sprintf("device:domain4:p4"),
+					Port:       domain4TofinoPorts[dstVmx%3],
 				})
 			} else {
 				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain6:p6"),
-					Port:     domain6TofinoPorts[(dstVmx+1)%3],
+					DeviceName: fmt.Sprintf("device:domain6:p6"),
+					Port:       domain6TofinoPorts[(dstVmx+1)%3],
 				})
 			}
 			break
 		case 5:
 			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain4:p4"),
-				Port:     0,
+				DeviceName: fmt.Sprintf("device:domain4:p4"),
+				Port:       0,
 			})
 			if dstDomain == 1 {
 				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain2:p1"),
-					Port:     domain2TofinoPorts[dstVmx%3],
+					DeviceName: fmt.Sprintf("device:domain2:p1"),
+					Port:       domain2TofinoPorts[dstVmx%3],
 				})
 			} else {
 				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain6:p6"),
-					Port:     domain6TofinoPorts[(dstVmx+1)%3],
+					DeviceName: fmt.Sprintf("device:domain6:p6"),
+					Port:       domain6TofinoPorts[(dstVmx+1)%3],
 				})
 			}
 			break
 		case 7:
 			devices = append(devices, model.DevicePort{
-				DeviceID: fmt.Sprintf("device:domain6:p6"),
-				Port:     0,
+				DeviceName: fmt.Sprintf("device:domain6:p6"),
+				Port:       0,
 			})
 			if dstDomain == 1 {
 				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain2:p1"),
-					Port:     domain2TofinoPorts[dstVmx%3],
+					DeviceName: fmt.Sprintf("device:domain2:p1"),
+					Port:       domain2TofinoPorts[dstVmx%3],
 				})
 			} else {
 				devices = append(devices, model.DevicePort{
-					DeviceID: fmt.Sprintf("device:domain4:p4"),
-					Port:     domain4TofinoPorts[dstVmx%3],
+					DeviceName: fmt.Sprintf("device:domain4:p4"),
+					Port:       domain4TofinoPorts[dstVmx%3],
 				})
 			}
 		}

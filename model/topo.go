@@ -24,6 +24,12 @@ type Link struct {
 	EndPoint2 string `orm:"column(endPoint2)"`
 }
 
+// DevicePort 交换机及转发端口结构
+type DevicePort struct {
+	DeviceName string
+	Port       int32
+}
+
 func (d *Device) TableName() string {
 	return "t_devices"
 }

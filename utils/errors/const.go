@@ -10,6 +10,7 @@ const (
 	CodeRegisterDatabaseFailed = 10006
 	CodeRunSyncdbFailed        = 10007
 	CodeGetTofinoPortFailed    = 10008
+	CodePrepareFlowFailed      = 10009
 )
 
 var (
@@ -22,4 +23,5 @@ var (
 	RegisterDatabaseFailed = New(CodeRegisterDatabaseFailed, "register database failed")
 	RunSyncdbFailed        = New(CodeRunSyncdbFailed, "run syncdb failed")
 	GetTofinoPortFailed    = New(CodeGetTofinoPortFailed, "get tofino port failed")
+	PrepareFlowFailed      = New(CodePrepareFlowFailed, "prepare flow failed")
 )

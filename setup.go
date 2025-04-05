@@ -66,7 +66,7 @@ func SetupORM(config *viper.Viper) (orm.Ormer, error) {
 	orm.RegisterModel(new(model.Link))
 	orm.RegisterModel(new(model.TofinoPort))
 	orm.RegisterModel(new(model.TrafficHistory))
-	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4", config.GetString("user"),
+	dataSource := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&loc=Asia%%2FShanghai", config.GetString("user"),
 		config.GetString("password"), config.GetString("host"),
 		config.GetString("port"), config.GetString("database"))
 	if err := orm.RegisterDataBase("default", "mysql", dataSource); err != nil {

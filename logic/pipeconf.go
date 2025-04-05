@@ -3,8 +3,9 @@ package logic
 import (
 	log "github.com/sirupsen/logrus"
 	"onosutil/model"
-	"onosutil/utils/format"
+	"onosutil/utils/errors"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -24,63 +25,53 @@ func outputToFile(unsupported []string, modal string) {
 	}
 }
 
-// todo: 修改BatchCheckPipeconfHandler的整体逻辑
-func (m *Manager) BatchCheckPipeconfHandler(ctx *context.Context) {
-	var req struct {
-		SendArray []string `json:"sendArray"`
-		ModalType string   `json:"modalType"`
+// GetDevicePipeconfHandler 获取设备对应的pipeconf信息
+func (m *Manager) GetDevicePipeconfHandler(ctx *context.Context) {
+	// 注意这里的Get参数定为了deviceID，实际指代的是deviceName
+	deviceName := ctx.Input.Query("deviceID")
+	if deviceName == "" {
+		log.Errorf("GetDevicePipeconfHandler deviceID is empty")
+		responseError(ctx, errors.InvalidParam)
+		return
 	}
-
-	if err := ctx.BindJSON(&req); err != nil {
+	device := model.Device{}
+	if err := m.db.QueryTable(model.Device{}).Filter("device_name__exact").One(&device); err != nil {
+		log.Errorf("GetDevicePipeconfHandler query failed")
 		responseError(ctx, err)
 		return
 	}
-
-	req.ModalType = format.ModelStringCorrect(req.ModalType)
-
-	unsupported := make([]string, 0)
-
-	// 遍历sendArray，检查是否存在不支持的设备
-	for _, device := range req.SendArray {
-		//查找数据库中所有的表
-		var res []*model.Device
-		if _, err := m.db.QueryTable(&model.Device{}).Filter("device_id", device).All(&res); err != nil {
-			responseError(ctx, err)
-			return
-		}
-
-		if len(res) == 0 {
-			log.Printf("device %s not found", device)
-			continue
-		}
-
-		if strings.Contains(res[0].SupportModal, req.ModalType) {
-			continue
-		} else {
-			unsupported = append(unsupported, device)
-		}
+	res := DeviceInfo{
+		ManagementAddress: device.ManagementAddress,
+		Driver:            device.Driver,
+		Pipeconf:          device.Pipeconf,
 	}
-
-	type getUnsupportDeviceResponse struct {
-		UnsupportDevices []string `json:"unsupported"`
-	}
-	//把结果输出到output
-	outputToFile(unsupported, req.ModalType)
-	// 返回结果
-	responseSuccess(ctx, getUnsupportDeviceResponse{
-		UnsupportDevices: unsupported,
-	})
-
-}
-
-// GetDevicePipeconfHandler 获取设备对应的pipeconf信息
-func (m *Manager) GetDevicePipeconfHandler(ctx *context.Context) {
-	deviceID := ctx.Input.Query("deviceID")
-	log.Infof(deviceID)
-	// todo: 回包内容要和ONOS API一致
+	responseSuccess(ctx, res)
 }
 
 // ModifyDevicePipeconfHandler 修改设备的pipeconf（调用武大的流水线覆盖功能）
 func (m *Manager) ModifyDevicePipeconfHandler(ctx *context.Context) {
-
+	var req struct {
+		DeviceID string `json:"deviceID"`
+		Pipeconf string `json:"pipeconf"`
+	}
+	if err := ctx.BindJSON(&req); err != nil {
+		log.Errorf("ModifyDevicePipeconfHandler bindjson failed: %v", err)
+		responseError(ctx, err)
+		return
+	}
+	// 执行武大流水线覆盖程序（todo:确定程序路径）
+	cmd := exec.Command("python3", "/home/onos/Desktop/pipeconf.py", "-d", req.DeviceID, "-p", req.Pipeconf)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorf("ModifyDevicePipeconfHandler exec failed: %v", err)
+		responseError(ctx, err)
+		return
+	}
+	res := strings.TrimSpace(string(output))
+	if res != "True" {
+		log.Errorf("ModifyDevicePipeconfHandler failed: %s", res)
+		responseError(ctx, errors.PipeconfCoverFailed)
+		return
+	}
+	responseSuccess(ctx, nil)
 }

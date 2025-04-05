@@ -27,9 +27,6 @@ func ExtractSupportModal(s string) (string, error) {
 // ExtractDeviceName 从deviceID中提取deviceName
 func ExtractDeviceName(s string) (string, error) {
 	parts := strings.Split(s, "_")
-	if len(parts) <= 1 {
-		return "", errors.New("ExtractDeviceName failed")
-	}
 	return parts[0], nil
 }
 

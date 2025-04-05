@@ -59,7 +59,7 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 		// check pipeconf
 		device := model.Device{}
 		if err := m.db.QueryTable(&model.Device{}).Filter("device_name__exact", dev.DeviceName).One(&device); err != nil {
-			log.Warnf("RecordTrafficHandler path device not found, err: %v", err)
+			log.Warnf("RecordTrafficHandler path device %s not found, err: %v", dev.DeviceName, err)
 			reachable = false
 			continue
 		}
@@ -74,11 +74,12 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 	}
 	log.Infof("Practical Routing Path:%v", pathInfo)
 	traffic := model.TrafficHistory{
-		SrcHost:  trafficInfo.SrcHost,
-		DstHost:  trafficInfo.DstHost,
-		ModeName: trafficInfo.ModeName,
-		Datetime: time.Unix(trafficInfo.DateTime, 0).In(time.FixedZone("CST", 8*60*60)), // 修改时间为中国时区
-		PathInfo: strings.Join(pathInfo, ","),
+		SrcHost:   trafficInfo.SrcHost,
+		DstHost:   trafficInfo.DstHost,
+		ModeName:  trafficInfo.ModeName,
+		Timestamp: trafficInfo.DateTime,
+		Datetime:  time.Unix(trafficInfo.DateTime, 0),
+		PathInfo:  strings.Join(pathInfo, ","),
 	}
 	if _, err := m.db.Insert(&traffic); err != nil {
 		log.Errorf("RecordTrafficHandler err: %v", err)
@@ -89,14 +90,24 @@ func (m *Manager) RecordTrafficHandler(ctx *context.Context) {
 
 // QueryTrafficHandler 流量查询
 func (m *Manager) QueryTrafficHandler(ctx *context.Context) {
-	// todo: 分页查询
 	var traffics []model.TrafficHistory
-	if _, err := m.db.QueryTable(&model.TrafficHistory{}).All(&traffics); err != nil {
+	qs := m.db.QueryTable(&model.TrafficHistory{})
+	t := ctx.Input.Query("time")
+	if t != "" {
+		timestamp, err := strconv.ParseInt(t, 0, 64)
+		if err != nil {
+			log.Errorf("QueryTrafficHandler parameter error, err: %v", err)
+			responseError(ctx, err)
+			return
+		}
+		qs = qs.Filter("timestamp__gte", timestamp)
+	}
+	if _, err := qs.All(&traffics); err != nil {
 		log.Error("QueryTrafficHandler query error:", err)
 		responseError(ctx, err)
 		return
 	}
-	res := make([]TrafficResponse, len(traffics))
+	res := make([]TrafficResponse, 0)
 	for _, t := range traffics {
 		res = append(res, TrafficResponse{
 			SrcHost:  t.SrcHost,

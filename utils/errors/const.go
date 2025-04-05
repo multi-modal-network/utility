@@ -11,6 +11,8 @@ const (
 	CodeRunSyncdbFailed        = 10007
 	CodeGetTofinoPortFailed    = 10008
 	CodePrepareFlowFailed      = 10009
+	CodeInvalidParameter       = 10010
+	CodePipeconfCoverFailed    = 10011
 )
 
 var (
@@ -24,4 +26,6 @@ var (
 	RunSyncdbFailed        = New(CodeRunSyncdbFailed, "run syncdb failed")
 	GetTofinoPortFailed    = New(CodeGetTofinoPortFailed, "get tofino port failed")
 	PrepareFlowFailed      = New(CodePrepareFlowFailed, "prepare flow failed")
+	InvalidParam           = New(CodeInvalidParameter, "invalid parameter")
+	PipeconfCoverFailed    = New(CodePipeconfCoverFailed, "pipeconf coverage failed")
 )

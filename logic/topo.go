@@ -16,11 +16,15 @@ import (
 
 type NetConf struct {
 	Devices map[string]DeviceBasic `json:"devices"`
-	Links   map[string]struct{}    `json:"links"`
+	Links   map[string]LinkBasic   `json:"links"`
 }
 
 type DeviceBasic struct {
 	Basic DeviceInfo `json:"basic"`
+}
+
+type LinkBasic struct {
+	Basic struct{} `json:"basic"`
 }
 
 type DeviceInfo struct {
@@ -36,8 +40,13 @@ type updateTopoResponse struct {
 }
 
 type getTopoResponse struct {
-	Devices []model.Device `json:"devices"`
-	Links   []model.Link   `json:"links"`
+	Devices map[string]DeviceBasic `json:"devices"`
+	Ports   map[string]struct{}    `json:"ports"`
+	Apps    map[string]struct{}    `json:"apps"`
+	Hosts   map[string]struct{}    `json:"hosts"`
+	Layouts map[string]struct{}    `json:"layouts"`
+	Links   map[string]LinkBasic   `json:"links"`
+	Region  map[string]struct{}    `json:"region"`
 }
 
 // 向onos推送netcfg
@@ -94,13 +103,13 @@ func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 // UpdateTopoHandler 上传netcfg.json文件更新拓扑
 func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 	// 转发Netcfg至ONOS
-	//elapsedTime, err := sendNetcfgToONOS(ctx)
-	//if err != nil {
-	//	log.Error("sendNetcfgToONOS failed, error:", err)
-	//	responseError(ctx, err)
-	//	return
-	//}
-	//log.Info("sendNetcfgToONOS elapsedTime: ", elapsedTime)
+	elapsedTime, err := sendNetcfgToONOS(ctx)
+	if err != nil {
+		log.Error("sendNetcfgToONOS failed, error:", err)
+		responseError(ctx, err)
+		return
+	}
+	log.Info("sendNetcfgToONOS elapsedTime: ", elapsedTime)
 	// 处理拓扑信息
 	netcfg := NetConf{}
 	if err := ctx.BindJSON(&netcfg); err != nil {
@@ -148,7 +157,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			SupportModal:      supportModal,
 		})
 	}
-	devNumber, err := m.db.InsertMulti(100, devices)
+	devNumber, err = m.db.InsertMulti(100, devices)
 	if err != nil {
 		log.Errorf("UpdateTopoHandler error: InsertMulti error: %s", err)
 		responseError(ctx, err)
@@ -190,9 +199,27 @@ func (m *Manager) GetTopoHandler(ctx *context.Context) {
 		responseError(ctx, err)
 		return
 	}
-	// todo： 对齐ONOS API的回包格式
-	responseSuccess(ctx, getTopoResponse{
-		Devices: devices,
-		Links:   links,
-	})
+	res := getTopoResponse{
+		Devices: make(map[string]DeviceBasic),
+		Ports:   make(map[string]struct{}),
+		Apps:    make(map[string]struct{}),
+		Hosts:   make(map[string]struct{}),
+		Layouts: make(map[string]struct{}),
+		Links:   make(map[string]LinkBasic),
+		Region:  make(map[string]struct{}),
+	}
+	for _, d := range devices {
+		basic := DeviceBasic{Basic: DeviceInfo{
+			Driver:            d.Driver,
+			ManagementAddress: d.ManagementAddress,
+			Pipeconf:          d.Pipeconf,
+		}}
+		res.Devices[d.DeviceID] = basic
+	}
+	for _, l := range links {
+		basic := LinkBasic{Basic: struct{}{}}
+		link := strings.Join(append([]string{}, l.EndPoint1, l.EndPoint2), "-")
+		res.Links[link] = basic
+	}
+	responseSuccess(ctx, res)
 }

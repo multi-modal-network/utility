@@ -11,6 +11,7 @@ import (
 // the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.
 
 func main() {
+	log.SetReportCaller(true)
 	// 初始化数据库
 	ormer, err := SetupORM(viper.Sub("db"))
 	if err != nil {

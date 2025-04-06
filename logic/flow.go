@@ -32,7 +32,7 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 		return
 	}
 	devices := calc.GetPathDevices(int32(src), int32(dst))
-	log.Infof("RecordTrafficHandler getPathInfo devices: %v", devices)
+	log.Infof("PrepareFlowsHandler getPathInfo devices: %v", devices)
 	flows, reachable := make([]string, 0), true
 	for _, dev := range devices {
 		if reachable == false {
@@ -45,7 +45,7 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 			tofino := &model.TofinoPort{}
 			if err := m.db.QueryTable(&model.TofinoPort{}).Filter("switch_id__exact", switchID).
 				Filter("modal_type__exact", modalType).One(tofino); err != nil {
-				log.Warnf("RecordTrafficHandler device %v port not support", dev.DeviceName)
+				log.Warnf("PrepareFlowsHandler device %v port not support", dev.DeviceName)
 				reachable = false
 				continue
 			}
@@ -54,18 +54,18 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 		// check pipeconf
 		device := model.Device{}
 		if err := m.db.QueryTable(&model.Device{}).Filter("device_name__exact", dev.DeviceName).One(&device); err != nil {
-			log.Warnf("RecordTrafficHandler path device not found, err: %v", err)
+			log.Warnf("PrepareFlowsHandler path device not found, err: %v", err)
 			reachable = false
 			continue
 		}
 		mode := format.ModelStringCorrect(modalType)
 		if !strings.Contains(device.SupportModal, mode) {
-			log.Warnf("RecordTrafficHandler device %v pipeconf not support", dev.DeviceName)
+			log.Warnf("PrepareFlowsHandler device %v pipeconf not support", dev.DeviceName)
 			reachable = false
 			continue
 		}
 		// 更新flows
-		flows = append(flows, strings.Join(append([]string{}, device.DeviceID, strconv.Itoa(int(port))), "/"))
+		flows = append(flows, strings.Join(append([]string{}, strings.ToLower(device.DeviceID), strconv.Itoa(int(port))), "/"))
 	}
 	log.Infof("PrepareFlowsHandler flows: %v", flows)
 	flowsStr := strings.Join(flows, ",")

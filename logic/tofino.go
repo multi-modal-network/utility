@@ -45,24 +45,21 @@ func (m *Manager) GetTofinoPortHandler(ctx *context.Context) {
 // ModifyTofinoPortHandler 修改Tofino交换机模态对应的转发端口
 func (m *Manager) ModifyTofinoPortHandler(ctx *context.Context) {
 	var req struct {
-		SwitchID  int32  `json:"switchID"`
-		ModalType string `json:"modalType"`
+		SwitchID  int32  `json:"switch_id"`
+		ModalType string `json:"modal_type"`
 		Port      int32  `json:"port"`
 	}
 	if err := ctx.BindJSON(&req); err != nil {
 		responseError(ctx, err)
 		return
 	}
-	tofino := &model.TofinoPort{}
-	if err := m.db.QueryTable(&model.TofinoPort{}).Filter("switch_id__exact", req.SwitchID).
-		Filter("modal_type__exact", req.ModalType).One(tofino); err != nil {
-		log.Errorf("ModifyTofinoPortHandler query port failed: %v", err)
-		responseError(ctx, err)
-		return
+	tofino := model.TofinoPort{
+		SwitchID:  req.SwitchID,
+		ModalType: req.ModalType,
+		Port:      req.Port,
 	}
-	tofino.OldPort = tofino.Port
-	tofino.Port = req.Port
-	if _, err := m.db.Update(tofino, "old_port"); err != nil {
+	log.Infof("ModifyTofinoPortHandler tofino:%v", tofino)
+	if _, err := m.db.InsertOrUpdate(&tofino, "port", "old_port"); err != nil {
 		log.Errorf("ModifyTofinoPortHandler update failed: %v", err)
 		responseError(ctx, err)
 		return

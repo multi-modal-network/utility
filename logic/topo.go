@@ -157,11 +157,13 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			SupportModal:      supportModal,
 		})
 	}
-	devNumber, err = m.db.InsertMulti(100, devices)
-	if err != nil {
-		log.Errorf("UpdateTopoHandler error: InsertMulti error: %s", err)
-		responseError(ctx, err)
-		return
+	if len(devices) != 0 {
+		devNumber, err = m.db.InsertMulti(100, devices)
+		if err != nil {
+			log.Errorf("UpdateTopoHandler error: device InsertMulti error: %s", err)
+			responseError(ctx, err)
+			return
+		}
 	}
 	// 链路信息入库
 	links := make([]model.Link, 0)
@@ -172,11 +174,13 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			EndPoint2: parts[1],
 		})
 	}
-	linkNumber, err = m.db.InsertMulti(100, links)
-	if err != nil {
-		log.Errorf("UpdateTopoHandler error: InsertMulti error: %s", err)
-		responseError(ctx, err)
-		return
+	if len(links) != 0 {
+		linkNumber, err = m.db.InsertMulti(100, links)
+		if err != nil {
+			log.Errorf("UpdateTopoHandler error: link InsertMulti error: %s", err)
+			responseError(ctx, err)
+			return
+		}
 	}
 	// 回包
 	responseSuccess(ctx, updateTopoResponse{

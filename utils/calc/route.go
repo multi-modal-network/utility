@@ -10,9 +10,15 @@ var portUp int32 = 1
 var portLeft int32 = 2
 var portRight int32 = 3
 
+// 烽火Tofino交换机端口设置
 var domain2TofinoPorts = []int32{132, 140, 148, 164}
 var domain4TofinoPorts = []int32{132, 140, 164}
 var domain6TofinoPorts = []int32{132, 140, 148, 164}
+
+// 武大Tofino交换机端口设置
+//var domain2TofinoPorts = []int32{128,144,160,176}
+//var domain4TofinoPorts = []int32{128,144,176}
+//var domain6TofinoPorts = []int32{128,144,160,176}
 
 var domain2TofinoSwitch int32 = 2000
 var domain4TofinoSwitch int32 = 4000

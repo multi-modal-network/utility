@@ -20,13 +20,13 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 		return
 	}
 	src, err := strconv.ParseInt(srcHost, 10, 64)
-	if err == nil {
+	if err != nil {
 		log.Error("PrepareFlowsHandler src_host parse failed")
 		responseError(ctx, err)
 		return
 	}
 	dst, err := strconv.ParseInt(dstHost, 10, 64)
-	if err == nil {
+	if err != nil {
 		log.Error("PrepareFlowsHandler dst_host parse failed")
 		responseError(ctx, err)
 		return
@@ -65,7 +65,7 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 			continue
 		}
 		// 更新flows
-		flows = append(flows, strings.Join(append([]string{}, device.DeviceID, strconv.Itoa(int(port))), "_"))
+		flows = append(flows, strings.Join(append([]string{}, device.DeviceID, strconv.Itoa(int(port))), "/"))
 	}
 	log.Infof("PrepareFlowsHandler flows: %v", flows)
 	flowsStr := strings.Join(flows, ",")

@@ -154,7 +154,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 			ManagementAddress: d.Basic.ManagementAddress,
 			Driver:            d.Basic.Driver,
 			Pipeconf:          d.Basic.Pipeconf,
-			SupportModal:      supportModal,
+			SupportModal:      strings.ToLower(supportModal),
 		})
 	}
 	if len(devices) != 0 {

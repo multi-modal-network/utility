@@ -6,8 +6,8 @@ import "strings"
 func ModelStringCorrect(modaltype string) string {
 	switch modaltype {
 	case "ipv4":
-		return "IP"
+		return "ip"
 	default:
-		return strings.ToUpper(modaltype)
+		return strings.ToLower(modaltype)
 	}
 }

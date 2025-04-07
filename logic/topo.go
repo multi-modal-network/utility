@@ -183,7 +183,7 @@ func (m *Manager) UpdateTopoHandler(ctx *context.Context) {
 		}
 	}
 	// 回包
-	responseSuccess(ctx, updateTopoResponse{
+	ctx.JSONResp(updateTopoResponse{
 		DevNumber:  devNumber,
 		LinkNumber: linkNumber,
 	})
@@ -225,5 +225,5 @@ func (m *Manager) GetTopoHandler(ctx *context.Context) {
 		link := strings.Join(append([]string{}, l.EndPoint1, l.EndPoint2), "-")
 		res.Links[link] = basic
 	}
-	responseSuccess(ctx, res)
+	ctx.JSONResp(res)
 }

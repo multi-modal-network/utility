@@ -35,7 +35,7 @@ func (m *Manager) GetDevicePipeconfHandler(ctx *context.Context) {
 		return
 	}
 	device := model.Device{}
-	if err := m.db.QueryTable(model.Device{}).Filter("device_name__exact").One(&device); err != nil {
+	if err := m.db.QueryTable(model.Device{}).Filter("device_name__exact", deviceName).One(&device); err != nil {
 		log.Errorf("GetDevicePipeconfHandler query failed")
 		responseError(ctx, err)
 		return
@@ -45,7 +45,7 @@ func (m *Manager) GetDevicePipeconfHandler(ctx *context.Context) {
 		Driver:            device.Driver,
 		Pipeconf:          device.Pipeconf,
 	}
-	responseSuccess(ctx, res)
+	ctx.JSONResp(res)
 }
 
 // ModifyDevicePipeconfHandler 修改设备的pipeconf（调用武大的流水线覆盖功能）

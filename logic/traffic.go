@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"fmt"
 	"github.com/beego/beego/v2/server/web/context"
 	log "github.com/sirupsen/logrus"
 	"onosutil/model"
@@ -20,11 +21,11 @@ type TrafficInfo struct {
 }
 
 type TrafficResponse struct {
-	SrcHost  int32
-	DstHost  int32
-	ModeName string
-	DateTime time.Time
-	PathInfo []string
+	SrcHost  string    `json:"srcHost"`
+	DstHost  string    `json:"dstHost"`
+	ModeName string    `json:"modeName"`
+	DateTime time.Time `json:"datetime"`
+	PathInfo []string  `json:"pathInfo"`
 }
 
 // RecordTrafficHandler 流量记录
@@ -108,14 +109,14 @@ func (m *Manager) QueryTrafficHandler(ctx *context.Context) {
 		return
 	}
 	res := make([]TrafficResponse, 0)
-	for _, t := range traffics {
+	for _, traffic := range traffics {
 		res = append(res, TrafficResponse{
-			SrcHost:  t.SrcHost,
-			DstHost:  t.DstHost,
-			ModeName: t.ModeName,
-			DateTime: t.Datetime,
-			PathInfo: strings.Split(t.PathInfo, ","),
+			SrcHost:  fmt.Sprintf("h%d", traffic.SrcHost),
+			DstHost:  fmt.Sprintf("h%d", traffic.DstHost),
+			ModeName: traffic.ModeName,
+			DateTime: traffic.Datetime,
+			PathInfo: strings.Split(traffic.PathInfo, ","),
 		})
 	}
-	responseSuccess(ctx, res)
+	ctx.JSONResp(res)
 }

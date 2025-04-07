@@ -60,7 +60,7 @@ func (m *Manager) ModifyDevicePipeconfHandler(ctx *context.Context) {
 		return
 	}
 	// 执行武大流水线覆盖程序（todo:确定程序路径）
-	cmd := exec.Command("python3", "/home/onos/Desktop/pipeconf.py", "-d", req.DeviceID, "-p", req.Pipeconf)
+	cmd := exec.Command("python3", "/pipeconf.py", "-d", req.DeviceID, "-p", req.Pipeconf)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Errorf("ModifyDevicePipeconfHandler exec failed: %v", err)

@@ -46,7 +46,7 @@ type getTopoResponse struct {
 	Hosts   map[string]struct{}    `json:"hosts"`
 	Layouts map[string]struct{}    `json:"layouts"`
 	Links   map[string]LinkBasic   `json:"links"`
-	Region  map[string]struct{}    `json:"region"`
+	Region  map[string]struct{}    `json:"regions"`
 }
 
 // 向onos推送netcfg

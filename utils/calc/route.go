@@ -11,14 +11,14 @@ var portLeft int32 = 2
 var portRight int32 = 3
 
 // 烽火Tofino交换机端口设置
-var domain2TofinoPorts = []int32{132, 140, 148, 164}
-var domain4TofinoPorts = []int32{132, 140, 164}
-var domain6TofinoPorts = []int32{132, 140, 148, 164}
+//var domain2TofinoPorts = []int32{132, 140, 148, 164}
+//var domain4TofinoPorts = []int32{132, 140, 164}
+//var domain6TofinoPorts = []int32{132, 140, 148, 164}
 
 // 武大Tofino交换机端口设置
-//var domain2TofinoPorts = []int32{128,144,160,176}
-//var domain4TofinoPorts = []int32{128,144,176}
-//var domain6TofinoPorts = []int32{128,144,160,176}
+var domain2TofinoPorts = []int32{128, 144, 160, 176}
+var domain4TofinoPorts = []int32{128, 144, 176}
+var domain6TofinoPorts = []int32{128, 144, 160, 176}
 
 var domain2TofinoSwitch int32 = 2000
 var domain4TofinoSwitch int32 = 4000
@@ -149,7 +149,7 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 		case 1:
 			devices = append(devices, model.DevicePort{
 				DeviceName: fmt.Sprintf("device:domain2:p1"),
-				Port:       0,
+				Port:       domain2TofinoPorts[3],
 			})
 			if dstDomain == 5 {
 				devices = append(devices, model.DevicePort{
@@ -166,7 +166,7 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 		case 5:
 			devices = append(devices, model.DevicePort{
 				DeviceName: fmt.Sprintf("device:domain4:p4"),
-				Port:       0,
+				Port:       domain4TofinoPorts[2],
 			})
 			if dstDomain == 1 {
 				devices = append(devices, model.DevicePort{
@@ -183,7 +183,7 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 		case 7:
 			devices = append(devices, model.DevicePort{
 				DeviceName: fmt.Sprintf("device:domain6:p6"),
-				Port:       0,
+				Port:       domain6TofinoPorts[3],
 			})
 			if dstDomain == 1 {
 				devices = append(devices, model.DevicePort{

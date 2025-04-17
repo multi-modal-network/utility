@@ -38,19 +38,6 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 		if reachable == false {
 			break
 		}
-		port := dev.Port
-		// check 转发端口（Tofino交换机转发端口可能未确定）
-		if dev.Port == 0 {
-			switchID := calc.GetSwitchID(dev.DeviceName)
-			tofino := &model.TofinoPort{}
-			if err := m.db.QueryTable(&model.TofinoPort{}).Filter("switch_id__exact", switchID).
-				Filter("modal_type__exact", modalType).One(tofino); err != nil {
-				log.Warnf("PrepareFlowsHandler device %v port not support", dev.DeviceName)
-				reachable = false
-				continue
-			}
-			port = tofino.Port
-		}
 		// check pipeconf
 		device := model.Device{}
 		if err := m.db.QueryTable(&model.Device{}).Filter("device_name__exact", dev.DeviceName).One(&device); err != nil {
@@ -65,7 +52,7 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 			continue
 		}
 		// 更新flows
-		flows = append(flows, strings.Join(append([]string{}, strings.ToLower(device.DeviceID), strconv.Itoa(int(port))), "/"))
+		flows = append(flows, strings.Join(append([]string{}, strings.ToLower(device.DeviceID), strconv.Itoa(int(dev.Port))), "/"))
 	}
 	log.Infof("PrepareFlowsHandler flows: %v", flows)
 	flowsStr := strings.Join(flows, ",")

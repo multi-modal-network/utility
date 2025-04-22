@@ -152,11 +152,37 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 				Port:       0,
 			})
 			if dstDomain == 5 {
+				// 卫星模态三台交换机
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite1"),
+					Port:       2,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite2"),
+					Port:       2,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite3"),
+					Port:       2,
+				})
+				// domain4交换机
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain4:p4"),
 					Port:       domain4TofinoPorts[dstVmx%3],
 				})
 			} else {
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite1"),
+					Port:       3,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite2"),
+					Port:       3,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite3"),
+					Port:       3,
+				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain6:p6"),
 					Port:       domain6TofinoPorts[(dstVmx+1)%3],
@@ -170,10 +196,34 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 			})
 			if dstDomain == 1 {
 				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite1"),
+					Port:       1,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite2"),
+					Port:       1,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite3"),
+					Port:       1,
+				})
+				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain2:p1"),
 					Port:       domain2TofinoPorts[dstVmx%3],
 				})
 			} else {
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite1"),
+					Port:       3,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite2"),
+					Port:       3,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite3"),
+					Port:       3,
+				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain6:p6"),
 					Port:       domain6TofinoPorts[(dstVmx+1)%3],
@@ -187,10 +237,34 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 			})
 			if dstDomain == 1 {
 				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite1"),
+					Port:       1,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite2"),
+					Port:       1,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite3"),
+					Port:       1,
+				})
+				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain2:p1"),
 					Port:       domain2TofinoPorts[dstVmx%3],
 				})
 			} else {
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite1"),
+					Port:       2,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite2"),
+					Port:       2,
+				})
+				devices = append(devices, model.DevicePort{
+					DeviceName: fmt.Sprintf("device:satellite3"),
+					Port:       2,
+				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain4:p4"),
 					Port:       domain4TofinoPorts[dstVmx%3],

@@ -155,15 +155,15 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 				// 卫星模态三台交换机
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite1"),
-					Port:       3,
+					Port:       2,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite2"),
-					Port:       3,
+					Port:       2,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite3"),
-					Port:       3,
+					Port:       2,
 				})
 				// domain4交换机
 				devices = append(devices, model.DevicePort{
@@ -173,15 +173,15 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 			} else {
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite1"),
-					Port:       2,
+					Port:       3,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite2"),
-					Port:       2,
+					Port:       3,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite3"),
-					Port:       2,
+					Port:       3,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain6:p6"),
@@ -214,15 +214,15 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 			} else {
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite1"),
-					Port:       2,
+					Port:       3,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite2"),
-					Port:       2,
+					Port:       3,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite3"),
-					Port:       2,
+					Port:       3,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain6:p6"),
@@ -255,15 +255,15 @@ func GetPathDevices(srcHost, dstHost int32) []model.DevicePort {
 			} else {
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite1"),
-					Port:       3,
+					Port:       2,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite2"),
-					Port:       3,
+					Port:       2,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:satellite3"),
-					Port:       3,
+					Port:       2,
 				})
 				devices = append(devices, model.DevicePort{
 					DeviceName: fmt.Sprintf("device:domain4:p4"),

@@ -63,7 +63,7 @@ func (m *Manager) ModifyDevicePipeconfHandler(ctx *context.Context) {
 	cmd := exec.Command("python3", "/home/wh/pipeconf.py", "-d", req.DeviceID, "-p", req.Pipeconf)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Errorf("ModifyDevicePipeconfHandler exec failed: %v", err)
+		log.Errorf("ModifyDevicePipeconfHandler exec failed: %v\n output: %s", err, string(output))
 		responseError(ctx, err)
 		return
 	}

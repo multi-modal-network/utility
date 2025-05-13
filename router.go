@@ -4,9 +4,14 @@ import (
 	"onosutil/logic"
 
 	"github.com/beego/beego/v2/server/web"
+
+	"github.com/beego/beego/v2/server/web/filter/cors"
 )
 
 func setupRouter(manager *logic.Manager) {
+	web.InsertFilter("/", web.BeforeRouter, cors.Allow(&cors.Options{
+		AllowAllOrigins: true,
+	}))
 	web.Post("/api/topo", manager.UpdateTopoHandler) // 更新拓扑结构
 	web.Get("/api/topo", manager.GetTopoHandler)     // 查询拓扑结构
 

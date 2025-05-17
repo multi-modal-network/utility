@@ -4,7 +4,6 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 	log "github.com/sirupsen/logrus"
 	"os/exec"
-	"fmt"
 )
 func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 	type SwitchSatelliteRequest struct {
@@ -16,8 +15,9 @@ func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 		log.Errorf("SwitchSatelliteHandler参数绑定错误: %v", err)
 		return
 	}else{
-		//解析到参数，执行武大提供的脚本 ssh luci@192.168.2.201 'sudo bash /home/luci/Desktop/ovsconf.sh  XXX'
-		cmd:= exec.Command("ssh", "kin@10.190.96.114", "sudo bash /home/kin/Desktop/ovsconf.sh", fmt.Sprintf("%s", req.SwitchID))
+		//解析到参数，执行武大提供的脚本ssh luci@192.168.2.201 'sudo bash /home/luci/Desktop/ovsconf.sh  XXX'
+		cmd := exec.Command("sshpass", "-p", "Fiberhome@2020", "ssh", "kin@10.190.96.114", "sudo", "-S", "bash", "/home/kin/Desktop/ovsconf.sh", req.SwitchID)
+		//设置命令的输出
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Errorf("SwitchSatelliteHandler脚本执行错误: %v", err)
@@ -26,6 +26,6 @@ func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 		}
 		log.Infof("SwitchSatelliteHandler脚本执行成功: %s", output)
 		// 解析脚本输出，判断是否成功
-		responseSuccess(ctx, output)
+		responseSuccess(ctx, nil)
 	}
 }

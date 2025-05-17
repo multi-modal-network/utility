@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os/exec"
 	"fmt"
+	"strings"
 )
 func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 	type SwitchSatelliteRequest struct {
@@ -18,6 +19,9 @@ func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 	}else{
 		//解析到参数，执行武大提供的脚本ssh -o PreferredAuthentications=publickey -o PasswordAuthentication=no luci@192.168.2.201 'sudo bash /home/luci/Desktop/ovsconf.sh  XXX'
 		cmd:= exec.Command("ssh", "-o", "PreferredAuthentications=publickey", "-o", "PasswordAuthentication=no", "luci@192.168.2.201", "sudo bash /home/luci/Desktop/ovsconf.sh", fmt.Sprintf("%s", req.SwitchID))
+		//再输入密码
+		cmd.Stdin = strings.NewReader("123")
+		//设置命令的输出
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Errorf("SwitchSatelliteHandler脚本执行错误: %v", err)

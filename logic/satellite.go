@@ -3,8 +3,6 @@ package logic
 import (
 	"github.com/beego/beego/v2/server/web/context"
 	log "github.com/sirupsen/logrus"
-	"onosutil/utils/errors"
-	"strings"
 	"os/exec"
 	"fmt"
 )
@@ -28,12 +26,6 @@ func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 		}
 		log.Infof("SwitchSatelliteHandler脚本执行成功: %s", output)
 		// 解析脚本输出，判断是否成功
-		res := strings.TrimSpace(string(output))
-		if res != "True" {
-			log.Errorf("ModifyDevicePipeconfHandler failed: %s", res)
-			responseError(ctx, errors.PipeconfCoverFailed)
-			return
-		}
-		responseSuccess(ctx, res)
+		responseSuccess(ctx, output)
 	}
 }

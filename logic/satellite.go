@@ -26,6 +26,6 @@ func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 		}
 		log.Infof("SwitchSatelliteHandler脚本执行成功: %s", output)
 		// 解析脚本输出，判断是否成功
-		responseSuccess(ctx, output)
+		responseSuccess(ctx, nil)
 	}
 }

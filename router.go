@@ -26,5 +26,6 @@ func setupRouter(manager *logic.Manager) {
 
 	web.Get("/api/flows", manager.PrepareFlowsHandler) // 根据三元信息计算需要下发的流表项
 
+	web.Post("/api/switchsatellite", manager.SwitchSatelliteHandler) // 更新交换机卫星链路
 	web.Router("/", &MainController{})
 }

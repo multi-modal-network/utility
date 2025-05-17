@@ -3,8 +3,6 @@ package logic
 import (
 	"github.com/beego/beego/v2/server/web/context"
 	log "github.com/sirupsen/logrus"
-	"onosutil/utils/errors"
-	"strings"
 	"os/exec"
 	"fmt"
 )

@@ -4,8 +4,6 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 	log "github.com/sirupsen/logrus"
 	"os/exec"
-	"fmt"
-	"strings"
 )
 func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 	type SwitchSatelliteRequest struct {
@@ -18,9 +16,7 @@ func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 		return
 	}else{
 		//解析到参数，执行武大提供的脚本ssh luci@192.168.2.201 'sudo bash /home/luci/Desktop/ovsconf.sh  XXX'
-		cmd:= exec.Command("ssh", "luci@192.168.2.201", "sudo bash /home/luci/Desktop/ovsconf.sh", fmt.Sprintf("%s", req.SwitchID))
-		//再输入密码
-		cmd.Stdin = strings.NewReader("123")
+		cmd := exec.Command("sshpass", "-p", "123", "ssh", "luci@192.168.2.201", "sudo", "-S", "bash", "/home/luci/Desktop/ovsconf.sh", req.SwitchID)
 		//设置命令的输出
 		output, err := cmd.CombinedOutput()
 		if err != nil {

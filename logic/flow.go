@@ -1,14 +1,17 @@
 package logic
 
 import (
-	"github.com/beego/beego/v2/server/web/context"
-	log "github.com/sirupsen/logrus"
 	"onosutil/model"
 	"onosutil/utils/calc"
 	"onosutil/utils/errors"
 	"onosutil/utils/format"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/beego/beego/v2/server/web/context"
+	log "github.com/sirupsen/logrus"
 )
 
 // PrepareFlowsHandler 根据源目主机和模态类型计算需要下发流表的目标，返回（deviceID/port）结构数组，oar会知道怎么下发具体流表
@@ -70,4 +73,17 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 	log.Infof("PrepareFlowsHandler flows: %v", flows)
 	flowsStr := strings.Join(flows, ",")
 	responseSuccess(ctx, flowsStr)
+}
+
+func (m *Manager) AddNdnFlowHandler(ctx *context.Context) {
+	cmd := exec.Command("sudo", "/bin/python3", "/ndn_flow.py")
+	cmd.Env = os.Environ()
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorf("Add ndn flow exec failed: %v\n output: %s", err, string(output))
+		responseError(ctx, err)
+		return
+	}
+	log.Infof("add ndn flow output:%s", string(output))
+	responseSuccess(ctx, nil)
 }

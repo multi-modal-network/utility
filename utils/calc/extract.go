@@ -32,8 +32,10 @@ func ExtractDeviceName(s string) (string, error) {
 
 // ExtractGroup 从deviceID中提取group
 func ExtractGroup(s string) (int32, error) {
-	if s == "device:domain2:p1" || s == "device:domain4:p4" || s == "device:domain6:p6" ||
-		s == "device:satellite1" || s == "device:satellite2" || s == "device:satellite3" {
+	if s == "device:satellite1" || s == "device:satellite2" || s == "device:satellite3" {
+		return 0, nil
+	}
+	if strings.Contains(s, "device:domain2:p1") || strings.Contains(s, "device:domain4:p4") || strings.Contains(s, "device:domain6:p6") {
 		return 0, nil
 	}
 	groupStr, ok := extractStringBetweenSubStr(s, "group", ":level")
@@ -52,13 +54,13 @@ func ExtractDomain(s string) (int32, error) {
 	if s == "device:satellite1" || s == "device:satellite2" || s == "device:satellite3" {
 		return 3, nil
 	}
-	if s == "device:domain2:p1" {
+	if strings.Contains(s, "device:domain2:p1") {
 		return 2, nil
 	}
-	if s == "device:domain4:p4" {
+	if strings.Contains(s, "device:domain4:p4") {
 		return 4, nil
 	}
-	if s == "device:domain6:p6" {
+	if strings.Contains(s, "device:domain6:p6") {
 		return 6, nil
 	}
 	domainStr, ok := extractStringBetweenSubStr(s, "domain", ":group")
@@ -83,13 +85,13 @@ func ExtractSwitchID(s string) (int32, error) {
 	if s == "device:satellite3" {
 		return 3300, nil
 	}
-	if s == "device:domain2:p1" {
+	if strings.Contains(s, "device:domain2:p1") {
 		return 2000, nil
 	}
-	if s == "device:domain4:p4" {
+	if strings.Contains(s, "device:domain4:p4") {
 		return 4000, nil
 	}
-	if s == "device:domain6:p6" {
+	if strings.Contains(s, "device:domain6:p6") {
 		return 6000, nil
 	}
 	lastIndex := strings.LastIndex(s, ":")

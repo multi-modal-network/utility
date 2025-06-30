@@ -3,8 +3,6 @@ package logic
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/beego/beego/v2/server/web/context"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"onosutil/model"
@@ -12,6 +10,9 @@ import (
 	"onosutil/utils/errors"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/server/web/context"
+	log "github.com/sirupsen/logrus"
 )
 
 type NetConf struct {
@@ -52,7 +53,10 @@ type getTopoResponse struct {
 // 向onos推送netcfg
 func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 	startTime := time.Now()
-	url := "http://127.0.0.1:8181/onos/v1/network/configuration"
+	// 三台onos的url
+	onos1Url := "http://127.0.0.1:8181/onos/v1/network/configuration"
+	onos2Url := "http://127.0.0.1:8182/onos/v1/network/configuration"
+	onos3Url := "http://127.0.0.1:8183/onos/v1/network/configuration"
 	// 去除json中的links字段内容（ONOS的API不识别）
 	b := ctx.Input.RequestBody
 	var data map[string]interface{}
@@ -62,38 +66,76 @@ func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 		return elapsedTime, err
 	}
 	delete(data, "links")
-	jsonData, err := json.Marshal(data)
-	if err != nil {
+	// 解析devices
+	deviceRaw, ok := data["devices"].(map[string]interface{})
+	if !ok {
 		elapsedTime := time.Since(startTime)
-		log.Error("sendNetcfgToONOS json.Marshal err:", err)
-		return elapsedTime, err
+		log.Error("devices field not found or invalid")
+		return elapsedTime, errors.New(400, "devices field not found or invalid")
 	}
-	// 创建http请求
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		elapsedTime := time.Since(startTime)
-		log.Error("sendNetcfgToONOS http.NewRequest error:", err)
-		return elapsedTime, err
+	// 按照domain分组
+	domainGroups := map[string]map[string]interface{}{
+		"domain5": {},
+		"domain7": {},
+		"default": {},
 	}
-	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth("onos", "rocks")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		elapsedTime := time.Since(startTime)
-		log.Error("sendNetcfgToONOS http.DefaultClient.Do error:", err)
-		return elapsedTime, err
+	for deviceID, device := range deviceRaw {
+		if strings.Contains(deviceID, "domain5") {
+			domainGroups["domain5"][deviceID] = device
+		} else if strings.Contains(deviceID, "domain7") {
+			domainGroups["domain7"][deviceID] = device
+		} else {
+			domainGroups["default"][deviceID] = device
+		}
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		elapsedTime := time.Since(startTime)
-		log.Error("sendNetcfgToONOS io.ReadAll error:", err)
-		return elapsedTime, err
-	}
-	if resp.StatusCode != 200 {
-		elapsedTime := time.Since(startTime)
-		log.Error("sendNetcfgToONOS failed:", resp.StatusCode)
-		return elapsedTime, errors.New(resp.StatusCode, "sendNetcfgToONOS failed:"+string(body))
+	for domain, devices := range domainGroups {
+		if len(devices) == 0 {
+			continue
+		}
+		domainData := map[string]interface{}{
+			"devices": devices,
+		}
+		jsonData, err := json.Marshal(domainData)
+		if err != nil {
+			elapsedTime := time.Since(startTime)
+			log.Error("sendNetcfgToONOS json.Marshal err:", err)
+			return elapsedTime, err
+		}
+		var url string
+		if domain == "domain5" {
+			url = onos2Url
+		} else if domain == "domain7" {
+			url = onos3Url
+		} else {
+			url = onos1Url
+		}
+		// 创建http请求
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+		if err != nil {
+			elapsedTime := time.Since(startTime)
+			log.Error("sendNetcfgToONOS http.NewRequest error:", err)
+			return elapsedTime, err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.SetBasicAuth("onos", "rocks")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			elapsedTime := time.Since(startTime)
+			log.Error("sendNetcfgToONOS http.DefaultClient.Do error:", err)
+			return elapsedTime, err
+		}
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			elapsedTime := time.Since(startTime)
+			log.Error("sendNetcfgToONOS io.ReadAll error:", err)
+			return elapsedTime, err
+		}
+		if resp.StatusCode != 200 {
+			elapsedTime := time.Since(startTime)
+			log.Error("sendNetcfgToONOS failed:", resp.StatusCode)
+			return elapsedTime, errors.New(resp.StatusCode, "sendNetcfgToONOS failed:"+string(body))
+		}
 	}
 	elapsedTime := time.Since(startTime)
 	log.Info("sendNetcfgToONOS response success")

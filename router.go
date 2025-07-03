@@ -24,7 +24,7 @@ func setupRouter(manager *logic.Manager) {
 	web.Post("/api/traffic", manager.RecordTrafficHandler) // 处理流量三元组基础信息 更新路径
 	web.Get("/api/traffic", manager.QueryTrafficHandler)   // 查询流量路径
 
-	web.Get("/api/flows", manager.PrepareFlowsHandler) // 根据三元信息计算需要下发的流表项
+	web.Post("/api/flows", manager.PrepareFlowsHandler) // 根据三元信息计算下发流表项到交换机
 
 	web.Post("/api/switchsatellite", manager.SwitchSatelliteHandler) // 更新交换机卫星链路
 

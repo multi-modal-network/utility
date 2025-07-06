@@ -30,17 +30,18 @@ func ApplyIDFlow(flows []string, url string, params packetparse.IDParams) (strin
             Treatment: Treatment{
                 Instructions: []Instruction{
                     {
-                        Type:         "PI_ACTION",
+                        Type:         "PROTOCOL_INDEPENDENT",
+                        Subtype:    "ACTION",
                         ActionID:     "ingress.set_next_id_hop",
-                        ActionParams: map[string]interface{}{"dst_port": port},
+                        ActionParams: map[string]string{"dst_port": port},
                     },
                 },
             },
-            ClearDeferred: false,
+            // ClearDeferred: false,
             Selector: Selector{
                 Criteria: []Criteria{
                     {
-                        Type: "PI_EXACT",
+                        Type: "PROTOCOL_INDEPENDENT",
                         Matches: []Match{
                             {Field: "hdr.ethernet.ether_type", Match: "exact", Value: params.EtherType}, // ID协议EtherType
                             {Field: "hdr.id.src_identity", Match: "exact", Value: params.SrcIdentity},

@@ -30,17 +30,18 @@ func ApplyIPFlow(flows []string, url string, params packetparse.IPParams) (strin
             Treatment: Treatment{
                 Instructions: []Instruction{
                     {
-                        Type:         "PI_ACTION",
+                        Type:         "PROTOCOL_INDEPENDENT",
+                        Subtype:    "ACTION",
                         ActionID:     "ingress.set_next_v4_hop",
-                        ActionParams: map[string]interface{}{"dst_port": port},
+                        ActionParams: map[string]string{"dst_port": port},
                     },
                 },
             },
-            ClearDeferred: false,
+            // ClearDeferred: false,
             Selector: Selector{
                 Criteria: []Criteria{
                     {
-                        Type: "PI_EXACT",
+                        Type: "PROTOCOL_INDEPENDENT",
                         Matches: []Match{
                             {Field: "hdr.ethernet.ether_type", Match: "exact", Value: params.EtherType}, // IPv4 EtherType
                             {Field: "hdr.ipv4.src_addr", Match: "exact", Value: params.SrcIPHex},

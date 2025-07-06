@@ -30,17 +30,18 @@ func ApplyNdnFlow(flows []string, url string, params packetparse.NDNParams) (str
             Treatment: Treatment{
                 Instructions: []Instruction{
                     {
-                        Type:         "PI_ACTION",
+                        Type:         "PROTOCOL_INDEPENDENT",
+                        Subtype:    "ACTION",
                         ActionID:     "ingress.set_next_ndn_hop",
-                        ActionParams: map[string]interface{}{"dst_port": port},
+                        ActionParams: map[string]string{"dst_port": port},
                     },
                 },
             },
-            ClearDeferred: false,
+            // ClearDeferred: false,
             Selector: Selector{
                 Criteria: []Criteria{
                     {
-                        Type: "PI_EXACT",
+                        Type: "PROTOCOL_INDEPENDENT",
                         Matches: []Match{
                             {Field: "hdr.ethernet.ether_type", Match: "exact", Value:params.EtherType}, // NDN协议EtherType
                             {Field: "hdr.ndn.ndn_prefix.code", Match: "exact", Value: "6"}, // NDN代码固定为6

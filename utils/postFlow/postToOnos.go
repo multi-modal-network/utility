@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
 	ONOSUsername = "onos"
 	ONOSPassword = "rocks"
 )
-
 
 // 流表结构体定义
 type Flow struct {
@@ -31,9 +32,9 @@ type Treatment struct {
 
 type Instruction struct {
 	Type         string                 `json:"type"`
-	Subtype      string                 `json:"subtype"`
+	Subtype     string                 `json:"subtype"`
 	ActionID     string                 `json:"actionId"`
-	ActionParams map[string]interface{} `json:"actionParams"`
+	ActionParams map[string]string `json:"actionParams"`
 }
 
 type Selector struct {
@@ -48,15 +49,18 @@ type Criteria struct {
 type Match struct {
 	Field string `json:"field"`
 	Match string `json:"match"`
-	Value string `json:"value"`
+	Value string `json:"value,omitempty"`
 }
 
-func PostToOnos(url string, flows interface{}) (string, error) {
-	jsonData, err := json.Marshal(flows)
+func PostToOnos(url string, flows []Flow) (string, error) {
+	loadData := map[string][]Flow{
+		"flows": flows,
+	}
+	jsonData, err := json.Marshal(loadData)
 	if err != nil {
 		return "marshal error", fmt.Errorf("failed to marshal flows: %v", err)
 	}
-
+	log.Infof("最终的json字符串: %s", string(jsonData))
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "request error", fmt.Errorf("failed to create request: %v", err)

@@ -1,9 +1,9 @@
 package postflow
 
 import (
-    "fmt"
-    "onosutil/utils/packetparse"
-    "strings"
+	"fmt"
+	"onosutil/utils/packetparse"
+	"strings"
 )
 
 func ApplyFlexIPFlow(flows []string, url string, params packetparse.FLEXIPParams) (string, error) {
@@ -29,9 +29,10 @@ func ApplyFlexIPFlow(flows []string, url string, params packetparse.FLEXIPParams
             Treatment: Treatment{
                 Instructions: []Instruction{
                     {
-                        Type:         "PI_ACTION",
+                        Type:         "PROTOCOL_INDEPENDENT",
+                        Subtype:    "ACTION",
                         ActionID:     "ingress.set_next_flexip_hop",
-                        ActionParams: map[string]interface{}{"dst_port": port},
+                        ActionParams: map[string]string{"dst_port": port},
                     },
                 },
             },
@@ -39,7 +40,7 @@ func ApplyFlexIPFlow(flows []string, url string, params packetparse.FLEXIPParams
             Selector: Selector{
                 Criteria: []Criteria{
                     {
-                        Type: "PI_EXACT",
+                        Type: "PROTOCOL_INDEPENDENT",
                         Matches: []Match{
                             {Field: "hdr.ethernet.ether_type", Match: "exact", Value: params.EtherType}, // 添加EtherType匹配
                             {Field: "hdr.flexip.src_format", Match: "exact", Value: params.SrcFormat},

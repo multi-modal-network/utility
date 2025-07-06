@@ -6,6 +6,7 @@ import "fmt"
 type ModalParser interface {
 	Parse(buffer []byte) (string, error)
 }
+
 type FLEXIPParams struct {
 	EtherType string
 	SrcFormat string
@@ -20,39 +21,68 @@ func (p *FLEXIPParams) Parse(buffer []byte) (string, error) {
 		return "failed", fmt.Errorf("FlexIP buffer too short, need at least 4 bytes for prefix, got %d", len(buffer))
 	}
 
-	flexipPrefix := int(buffer[0])<<24 | int(buffer[1])<<16 | int(buffer[2])<<8 | int(buffer[3])
+	// 完全按照Java代码的方式解析
+	flexipPrefix := int((buffer[0]&0xff)<<24 | (buffer[1]&0xff)<<16 | (buffer[2]&0xff)<<8 | (buffer[3] & 0xff))
+
+	// 完全按照Java代码的位操作
 	srcFormat := (flexipPrefix >> 26) & 0x3
 	dstFormat := (flexipPrefix >> 24) & 0x3
 	srcLength := (flexipPrefix >> 12) & 0x7ff
 	dstLength := flexipPrefix & 0x7ff
 
+	// 添加调试信息
+	fmt.Printf("Debug: flexipPrefix=0x%08x, srcFormat=%d, dstFormat=%d, srcLength=%d, dstLength=%d\n",
+		flexipPrefix, srcFormat, dstFormat, srcLength, dstLength)
+
+	// 计算字节长度
 	srcByteLength := srcLength / 8
 	dstByteLength := dstLength / 8
 
-	if len(buffer) < 100 || srcByteLength > 48 || dstByteLength > 48 {
-		return "failed", fmt.Errorf("FlexIP buffer invalid length or address length too long")
+	// 验证长度的合理性
+	if srcByteLength > 48 || dstByteLength > 48 {
+		return "failed", fmt.Errorf("FlexIP address length too long: src=%d, dst=%d bytes", srcByteLength, dstByteLength)
 	}
 
-	// 解析源FlexIP地址
-	srcAddr := make([]byte, srcByteLength)
-	srcStartPos := 52 - srcByteLength
-	for i := 0; i < srcByteLength; i++ {
-		srcAddr[i] = buffer[srcStartPos+i]
+	// 验证buffer长度
+	if len(buffer) < 100 {
+		return "failed", fmt.Errorf("FlexIP buffer too short, need at least 100 bytes, got %d", len(buffer))
 	}
 
-	// 解析目标FlexIP地址
-	dstAddr := make([]byte, dstByteLength)
-	dstStartPos := 100 - dstByteLength
-	for i := 0; i < dstByteLength; i++ {
-		dstAddr[i] = buffer[dstStartPos+i]
+	var srcAddr, dstAddr []byte
+
+	// 按照Java代码的方式提取地址
+	if srcByteLength > 0 {
+		srcAddr = make([]byte, srcByteLength)
+		srcStartPos := 52 - srcByteLength
+		for i := 0; i < srcByteLength; i++ {
+			srcAddr[i] = buffer[srcStartPos+i]
+		}
 	}
 
-	// 填充结构体字段（全部转为十六进制字符串）
-	p.EtherType = fmt.Sprintf("%x", 0x3690)
+	if dstByteLength > 0 {
+		dstAddr = make([]byte, dstByteLength)
+		dstStartPos := 100 - dstByteLength
+		for i := 0; i < dstByteLength; i++ {
+			dstAddr[i] = buffer[dstStartPos+i]
+		}
+	}
+
+	// 填充结构体字段
+	p.EtherType = fmt.Sprintf("%04x", 0x3690)
 	p.SrcFormat = fmt.Sprintf("%x", srcFormat)
 	p.DstFormat = fmt.Sprintf("%x", dstFormat)
-	p.SrcAddr = fmt.Sprintf("%x", srcAddr)
-	p.DstAddr = fmt.Sprintf("%x", dstAddr)
+
+	if len(srcAddr) > 0 {
+		p.SrcAddr = fmt.Sprintf("%x", srcAddr)
+	} else {
+		p.SrcAddr = ""
+	}
+
+	if len(dstAddr) > 0 {
+		p.DstAddr = fmt.Sprintf("%x", dstAddr)
+	} else {
+		p.DstAddr = ""
+	}
 
 	return "success", nil
 }

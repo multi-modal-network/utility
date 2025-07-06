@@ -2,6 +2,7 @@ package logic
 
 import (
 	"encoding/base64"
+	"fmt"
 	"onosutil/model"
 	"onosutil/utils/calc"
 	"onosutil/utils/errors"
@@ -26,9 +27,43 @@ type FlowRequest struct {
 
 func parseModalParams[T packetparse.ModalParser](modalType string, bufferData []byte) (T, error) {
 	var params T
-	res,err := params.Parse(bufferData)
-	log.Infof("Parse %s params: %s", modalType, res)
-	return params, err
+
+	// 使用反射或类型断言来正确初始化指针类型
+	switch any(params).(type) {
+	case *packetparse.IDParams:
+		idParams := &packetparse.IDParams{}
+		res, err := idParams.Parse(bufferData)
+		log.Infof("Parse %s params: %s", modalType, res)
+		return any(idParams).(T), err
+	case *packetparse.IPParams:
+		ipParams := &packetparse.IPParams{}
+		res, err := ipParams.Parse(bufferData)
+		log.Infof("Parse %s params: %s", modalType, res)
+		return any(ipParams).(T), err
+	case *packetparse.NDNParams:
+		ndnParams := &packetparse.NDNParams{}
+		res, err := ndnParams.Parse(bufferData)
+		log.Infof("Parse %s params: %s", modalType, res)
+		return any(ndnParams).(T), err
+	case *packetparse.GEOParams:
+		geoParams := &packetparse.GEOParams{}
+		res, err := geoParams.Parse(bufferData)
+		log.Infof("Parse %s params: %s", modalType, res)
+		return any(geoParams).(T), err
+	case *packetparse.MFParams:
+		mfParams := &packetparse.MFParams{}
+		res, err := mfParams.Parse(bufferData)
+		log.Infof("Parse %s params: %s", modalType, res)
+		return any(mfParams).(T), err
+	case *packetparse.FLEXIPParams:
+		flexipParams := &packetparse.FLEXIPParams{}
+		res, err := flexipParams.Parse(bufferData)
+		log.Infof("Parse %s params: %s", modalType, res)
+		return any(flexipParams).(T), err
+	default:
+		var zero T
+		return zero, fmt.Errorf("unsupported type")
+	}
 }
 
 // PrepareFlowsHandler 根据源目主机和模态类型计算需要下发流表的目标，返回（deviceID/port）结构数组，oar会知道怎么下发具体流表
@@ -55,7 +90,7 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 	var params packetparse.ModalParser
 	// 解析对应模态下流表需要的参数
 	switch req.ModalType {
-	case "ip":
+	case "ipv4":
 		params, err = parseModalParams[*packetparse.IPParams](req.ModalType, bufferData)
 		if err != nil {
 			log.Errorf("Parse IP params failed: %v", err)
@@ -199,37 +234,37 @@ func (m *Manager) AddNdnFlowHandler(ctx *context.Context) {
 func postFlows(flows []string, url string, modalType string, params packetparse.ModalParser) (string, error) {
 	switch modalType {
 	case "flexip":
-		flxipParam,ok:= params.(*packetparse.FLEXIPParams)
+		flxipParam, ok := params.(*packetparse.FLEXIPParams)
 		if !ok {
 			return "", errors.InvalidParam
 		}
 		return postflow.ApplyFlexIPFlow(flows, url, *flxipParam)
-	case "ip":
-		ipParam,ok:= params.(*packetparse.IPParams)
+	case "ipv4":
+		ipParam, ok := params.(*packetparse.IPParams)
 		if !ok {
 			return "", errors.InvalidParam
 		}
 		return postflow.ApplyIPFlow(flows, url, *ipParam)
 	case "ndn":
-		ndnParam,ok:= params.(*packetparse.NDNParams)
+		ndnParam, ok := params.(*packetparse.NDNParams)
 		if !ok {
 			return "", errors.InvalidParam
 		}
 		return postflow.ApplyNdnFlow(flows, url, *ndnParam)
 	case "geo":
-		geoParam,ok:= params.(*packetparse.GEOParams)
+		geoParam, ok := params.(*packetparse.GEOParams)
 		if !ok {
 			return "", errors.InvalidParam
 		}
 		return postflow.ApplyGEOFlow(flows, url, *geoParam)
 	case "mf":
-		mfParam,ok:= params.(*packetparse.MFParams)
+		mfParam, ok := params.(*packetparse.MFParams)
 		if !ok {
 			return "", errors.InvalidParam
 		}
 		return postflow.ApplyMfFlow(flows, url, *mfParam)
 	case "id":
-		idParam,ok:= params.(*packetparse.IDParams)
+		idParam, ok := params.(*packetparse.IDParams)
 		if !ok {
 			return "", errors.InvalidParam
 		}

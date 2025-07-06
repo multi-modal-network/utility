@@ -30,17 +30,18 @@ func ApplyGEOFlow(flows []string, url string, params packetparse.GEOParams) (str
             Treatment: Treatment{
                 Instructions: []Instruction{
                     {
-                        Type:         "PI_ACTION",
+                        Type:         "PROTOCOL_INDEPENDENT",
+                        Subtype:    "ACTION",
                         ActionID:     "ingress.geo_ucast_route",
-                        ActionParams: map[string]interface{}{"dst_port": port},
+                        ActionParams: map[string]string{"dst_port": port},
                     },
                 },
             },
-            ClearDeferred: false,
+            // ClearDeferred: false,
             Selector: Selector{
                 Criteria: []Criteria{
                     {
-                        Type: "PI_EXACT",
+                        Type: "PROTOCOL_INDEPENDENT",
                         Matches: []Match{
                             {Field: "hdr.ethernet.ether_type", Match: "exact", Value: params.EtherType}, // GEO EtherType
                             {Field: "hdr.gbc.geo_area_pos_lat", Match: "exact", Value: params.GeoAreaPosLat},

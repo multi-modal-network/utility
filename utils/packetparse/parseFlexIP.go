@@ -38,32 +38,29 @@ func (p *FLEXIPParams) Parse(buffer []byte) (string, error) {
 	srcByteLength := srcLength / 8
 	dstByteLength := dstLength / 8
 
-	// 验证长度的合理性
-	if srcByteLength > 48 || dstByteLength > 48 {
-		return "failed", fmt.Errorf("FlexIP address length too long: src=%d, dst=%d bytes", srcByteLength, dstByteLength)
-	}
-
-	// 验证buffer长度
-	if len(buffer) < 100 {
-		return "failed", fmt.Errorf("FlexIP buffer too short, need at least 100 bytes, got %d", len(buffer))
+	// 合理性校验
+	if srcByteLength < 0 || dstByteLength < 0 || srcByteLength > 48 || dstByteLength > 48 || len(buffer) < 4 {
+		return "failed", fmt.Errorf("FlexIP buffer invalid length or address length too long")
 	}
 
 	var srcAddr, dstAddr []byte
 
-	// 按照Java代码的方式提取地址
 	if srcByteLength > 0 {
-		srcAddr = make([]byte, srcByteLength)
 		srcStartPos := 52 - srcByteLength
-		for i := 0; i < srcByteLength; i++ {
-			srcAddr[i] = buffer[srcStartPos+i]
+		if srcStartPos < 0 || srcStartPos+srcByteLength > len(buffer) {
+			// Java 代码此时会抛异常，Go 这里返回空字符串
+			srcAddr = []byte{}
+		} else {
+			srcAddr = buffer[srcStartPos : srcStartPos+srcByteLength]
 		}
 	}
 
 	if dstByteLength > 0 {
-		dstAddr = make([]byte, dstByteLength)
 		dstStartPos := 100 - dstByteLength
-		for i := 0; i < dstByteLength; i++ {
-			dstAddr[i] = buffer[dstStartPos+i]
+		if dstStartPos < 0 || dstStartPos+dstByteLength > len(buffer) {
+			dstAddr = []byte{}
+		} else {
+			dstAddr = buffer[dstStartPos : dstStartPos+dstByteLength]
 		}
 	}
 

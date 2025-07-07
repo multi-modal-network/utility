@@ -18,12 +18,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type FlowRequest struct {
-	SrcHost    int    `json:"src_host"`
-	DstHost    int    `json:"dst_host"`
-	ModalType  string `json:"modal_type"`
-	BufferData string `json:"buffer_data"`
-}
 
 func parseModalParams[T packetparse.ModalParser](modalType string, bufferData []byte) (T, error) {
 	var params T
@@ -66,6 +60,14 @@ func parseModalParams[T packetparse.ModalParser](modalType string, bufferData []
 	}
 }
 
+
+type FlowRequest struct {
+	SrcHost    int    `json:"src_host"`
+	DstHost    int    `json:"dst_host"`
+	ModalType  string `json:"modal_type"`
+	BufferData string `json:"buffer_data"`
+}
+
 // PrepareFlowsHandler 根据源目主机和模态类型计算需要下发流表的目标，返回（deviceID/port）结构数组，oar会知道怎么下发具体流表
 func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 	var req FlowRequest
@@ -86,6 +88,8 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 		log.Errorf("PrepareFlowsHandler base64 decode failed: %v", err)
 		return
 	}
+
+	log.Infof("BufferData (Hex): % X", bufferData)
 
 	var params packetparse.ModalParser
 	// 解析对应模态下流表需要的参数

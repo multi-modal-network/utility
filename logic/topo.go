@@ -54,7 +54,7 @@ type getTopoResponse struct {
 func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 	startTime := time.Now()
 	// 三台onos的url
-	onos1Url := "http://127.0.0.1:8181/onos/v1/network/configuration"
+	onos1Url := "http://127.0.0.1:8184/onos/v1/network/configuration"
 	onos2Url := "http://127.0.0.1:8182/onos/v1/network/configuration"
 	onos3Url := "http://127.0.0.1:8183/onos/v1/network/configuration"
 	// 去除json中的links字段内容（ONOS的API不识别）
@@ -117,7 +117,7 @@ func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 			return elapsedTime, err
 		}
 		req.Header.Set("Content-Type", "application/json")
-		req.SetBasicAuth("onos", "rocks")
+		req.SetBasicAuth("onos", "Fiberhome@2020")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			elapsedTime := time.Since(startTime)

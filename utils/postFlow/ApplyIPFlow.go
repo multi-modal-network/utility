@@ -3,8 +3,32 @@ package postflow
 import (
 	"fmt"
 	"onosutil/utils/packetparse"
+	"strconv"
 	"strings"
 )
+
+func portToHex(port string) (string, error) {
+	// 将字符串转换为整数
+	portNum, err := strconv.Atoi(port)
+	if err != nil {
+		return "", fmt.Errorf("invalid port number: %v", err)
+	}
+
+	// 检查端口号是否在有效范围内
+	if portNum < 0 || portNum > 65535 {
+		return "", fmt.Errorf("port number out of range (0-65535)")
+	}
+
+	// 将整数转换为十六进制字符串，去掉前缀"0x"
+	hexStr := fmt.Sprintf("%X", portNum)
+
+	// 如果十六进制字符串长度为1，前面补0（可选，根据需求）
+	if len(hexStr) == 1 {
+		hexStr = "0" + hexStr
+	}
+
+	return hexStr, nil
+}
 
 func ApplyIPFlow(flows []string, url string, params packetparse.IPParams) (string, error) {
     if len(flows) == 0 {
@@ -19,7 +43,10 @@ func ApplyIPFlow(flows []string, url string, params packetparse.IPParams) (strin
             return "invalid flow format", fmt.Errorf("invalid flow format: %s", flow)
         }
         deviceID, port := flowInfo[0], flowInfo[1]
-        
+        // 把port修改为对应的十六进制字符串
+        if strings.Contains(deviceID,"domain2")||strings.Contains(deviceID,"domain4")||strings.Contains(deviceID,"domain6"){
+            port,_ = portToHex(port)
+        }
         // 创建流表项
         newFlow := Flow{
             Priority:    10,

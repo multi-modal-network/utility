@@ -11,7 +11,7 @@ import (
 
 const (
 	ONOSUsername = "onos"
-	ONOSPassword = "rocks"
+	ONOSPassword = "Fiberhome@2020"
 )
 
 // 流表结构体定义
@@ -66,7 +66,7 @@ func PostToOnos(url string, flows []Flow) (string, error) {
 		return "request error", fmt.Errorf("failed to create request: %v", err)
 	}
 
-	req.SetBasicAuth("onos", "rocks")
+	req.SetBasicAuth("onos", "Fiberhome@2020")
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

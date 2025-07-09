@@ -203,7 +203,7 @@ func (m *Manager) PrepareFlowsHandler(ctx *context.Context) {
 	}
 
 	// 三台ONOS的流表下发URL
-	onos1Url := "http://127.0.0.1:8181/onos/v1/flows?appId=org.stratumproject.basic-tna"
+	onos1Url := "http://127.0.0.1:8184/onos/v1/flows?appId=org.stratumproject.basic-tna"
 	onos2Url := "http://127.0.0.1:8182/onos/v1/flows?appId=org.stratumproject.basic-tna"
 	onos3Url := "http://127.0.0.1:8183/onos/v1/flows?appId=org.stratumproject.basic-tna"
 

@@ -3,8 +3,6 @@ package logic
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/beego/beego/v2/server/web/context"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"onosutil/model"
@@ -12,6 +10,9 @@ import (
 	"onosutil/utils/errors"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/server/web/context"
+	log "github.com/sirupsen/logrus"
 )
 
 type NetConf struct {
@@ -76,7 +77,7 @@ func sendNetcfgToONOS(ctx *context.Context) (time.Duration, error) {
 		return elapsedTime, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth("onos", "rocks")
+	req.SetBasicAuth("onos", "Fiberhome@2020")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		elapsedTime := time.Since(startTime)

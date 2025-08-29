@@ -16,7 +16,7 @@ func (m *Manager) SwitchSatelliteHandler(ctx *context.Context) {
 		return
 	}else{
 		//解析到参数，执行武大提供的脚本ssh luci@192.168.2.201 'sudo bash /home/luci/Desktop/ovsconf.sh  XXX'
-		cmd := exec.Command("sshpass", "-p", "123", "ssh", "luci@192.168.2.201", "sudo", "-S", "bash", "/home/luci/Desktop/ovsconf.sh", req.SwitchID)
+		cmd := exec.Command("sshpass", "-p", "123", "ssh", "luci@192.168.1.16", "sudo", "-S", "bash", "/home/luci/Desktop/ovsconf.sh", req.SwitchID)
 		//设置命令的输出
 		output, err := cmd.CombinedOutput()
 		if err != nil {
